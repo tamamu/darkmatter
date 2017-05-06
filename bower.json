@@ -1,0 +1,22 @@
+{
+  "name": "darkmatter",
+  "description": "The notebook-style Common Lisp environment",
+  "main": "index.js",
+  "authors": [
+    "tamamu"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "juicy-ace-editor": "^2.0.0",
+    "polymer": "Polymer/polymer#^2.0.0-rc.3",
+    "d3": "^4.8.0"
+  }
+}

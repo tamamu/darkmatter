@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>Darkmatter</title>
+	<script>
+		const LS_URI = "ws://localhost:8888";
+	</script>
+	<script src="bower_components/d3/d3.min.js"></script>
+	<script src="bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+	<link rel="import" href="bower_components/polymer/polymer.html">
+	<link rel="import" href="static/custom-element.html">
+	<script src="static/parse.js"></script>
+	<script src="static/socket.js"></script>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			width: 100vw;
+			background-color: #f0f0f0;
+		}
+		table, td, th {
+			border: 1px black solid;
+		}
+		#dm-container {
+			display: flex;
+			flex-direction: column;
+		}
+		custom-element {
+			margin: 10px auto;
+		}
+	</style>
+ </head>
+<body unresolved>
+	<h1>Darkmatter</h1>
+	<div id="dm-container">
+		<custom-element id="dm-initial"><custom-element>
+	</div>
+</body>
+</html>

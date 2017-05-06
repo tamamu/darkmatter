@@ -1,0 +1,78 @@
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
+<link rel="import" href="/bower_components/juicy-ace-editor/juicy-ace-editor.html">
+
+<dom-module id="custom-element">
+
+	<template>
+		<style>
+			juicy-ace-editor {
+				width: 80vw;
+				font-size: 12px;
+				min-height: 5em;
+			}
+			div#output {
+				width: 80vw;
+				min-height: 0;
+				background-color: white;
+				whitespace: pre;
+			}
+			div#output table,td,th {
+				min-width: 4em;
+				border: 1px black solid;
+				border-collapse: collapse;
+			}
+		</style>
+		<juicy-ace-editor id="editor"
+			theme="ace/theme/monokai"
+			mode="ace/mode/lisp"
+			softtabs="true"
+			tabsize="2"></juicy-ace-editor>
+		<div id="output"></div>
+	</template>
+
+<script>
+	class CustomElement extends Polymer.Element {
+		static get is() { return "custom-element"; }
+		static get properties() {
+			return {
+				next: String
+			}
+		}
+		constructor() {
+			super();
+			Polymer.RenderStatus.beforeNextRender(this, () => {
+				this.$.editor.editor.setOptions({maxLines: Infinity});
+			});
+		}
+
+		connect(ls, container) {
+			this.$.editor.onkeydown = (e) => {
+				if (e.ctrlKey && e.keyCode === 13) {
+					let contents = this.$.editor.value;
+					if (contents.trim() === '') {
+						if (this.next) {
+							document.getElementById(this.next).$.editor.editor.focus();
+						}
+					} else {
+						ls.eval(contents, this.$.output);
+						if (this.next == null) {
+							let instance = document.createElement('custom-element');
+							instance.id = Date.now().toString();
+							container.appendChild(instance);
+							instance.connect(ls, container);
+							this.next = instance.id;
+							instance.$.editor.editor.focus();
+						} else {
+							document.getElementById(this.next).$.editor.editor.focus();
+						}
+					}
+					e.preventDefault();
+				}
+			};
+		}
+	}
+
+	customElements.define(CustomElement.is, CustomElement);
+</script>
+
+</dom-module>
