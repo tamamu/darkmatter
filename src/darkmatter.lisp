@@ -42,7 +42,7 @@
     (setf darkmatter.local:*last-package* (package-name *package*))
     (in-package :darkmatter)
     (jsown:to-json
-      `(:obj ("return" . ,return-value)
+      `(:obj ("return" . ,(format nil "~A" return-value))
              ("output" . ,(format nil "~A~A"
                             (if (string= "" eo)
                                 ""
