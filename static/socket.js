@@ -34,11 +34,19 @@ class LispSocket {
 								.append('g')
 									.attr('transform', 'translate(40, 0)');
 
+		let colorCategory = d3.schemeCategory10;
+
 		svg.selectAll('circle')
 			 .data(vec)
 			 .enter()
 			 .append('circle')
 				.attr('class', 'mark')
+				.attr('fill', d => {
+					if (d.length>=2) {
+						return colorCategory[d[2]];
+					} else {
+						return 'black';
+					}})
 				.attr('cx', d => d[0])
 				.attr('cy', d => 300-d[1])
 				.attr('r', 5);
