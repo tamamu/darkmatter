@@ -68,6 +68,9 @@
 					}
 					e.preventDefault();
 				}
+        if (!(e.ctrlKey && e.keyCode === 83)) {
+          ls.modified = true;
+        }
 			};
 		}
 	}

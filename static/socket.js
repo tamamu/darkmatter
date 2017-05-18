@@ -1,8 +1,10 @@
 
 class LispSocket {
-	constructor(uri) {
+	constructor(uri, filepath) {
 		this.socket = new WebSocket(uri);
 		this.state = false;
+    this.file = filepath;
+    this.modified = false;
 		this.socket.onopen = (e) => {
 			console.log('Connected.');
 			this.state = true;
@@ -154,15 +156,52 @@ class LispSocket {
 				output.innerHTML = `<p>=> ${json['return']}</p>`;
 				output.innerHTML += result;
 			}
-			this.socket.send(src);
+      let sender = JSON.stringify({
+        "message": "eval",
+        "data": src
+      });
+      console.log(sender);
+			this.socket.send(sender);
 		} else {
-			console.log('Can\'t send the code.');
+			console.log("Can't send the code.");
 		}
 	}
+
+  save(editors) {
+    if (this.state && this.modified) {
+      let src = "";
+      for (let editor of editors) {
+        src += editor.$.editor.value + "\n";
+        src += "#|OUTPUT\n" + editor.$.output.innerHTML + "\n|#\n";
+      }
+      this.socket.onmessage = (e) => {
+        let json = JSON.parse(e.data);
+        console.log(`Result:${json['return']}`);
+        let show = document.getElementById('alert');
+        show.innerText = `Saved: ${json['return']} (${(new Date()).toString()})`;
+        window.ls.modified = false;
+      }
+      let sender = JSON.stringify({
+        "message": "save",
+        "file": this.file,
+        "data": src
+      });
+      this.socket.send(sender);
+    } else {
+      console.log("Can't save the code.");
+    }
+  }
 }
 
 window.onload = () => {
-	window.ls = new LispSocket(LS_URI);
+	window.ls = new LispSocket(LS_URI, FILE_PATH);
+  window.onkeydown = (e) => {
+    if (e.keyCode === 83 && e.ctrlKey) {
+      e.preventDefault()
+      window.ls.save(document.getElementsByTagName('custom-element'));
+      return false;
+    }
+  }
 	let container = document.getElementById('dm-container');
 	let initial = document.getElementById('dm-initial');
 	initial.connect(ls, container);

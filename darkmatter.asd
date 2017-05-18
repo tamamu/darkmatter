@@ -18,7 +18,10 @@
   :license "MIT"
   :depends-on (:clack
                :websocket-driver-server
-							 :jsown)
+							 :jsown
+               :djula
+               :string-case
+               :alexandria)
   :components ((:module "src"
                 :components
                 ((:file "darkmatter"))))
