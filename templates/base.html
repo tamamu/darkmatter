@@ -5,7 +5,7 @@
 	<title>Darkmatter</title>
 	<script>
 		const LS_URI = "ws://{{ host }}:{{ port }}";
-    const FILE_PATH = "{{ path }}"
+    const FILE_PATH = "{{ path }}";
 	</script>
 	<script src="/bower_components/d3/d3.js"></script>
   <script src="/bower_components/ace-builds/src-min/ace.js"></script>
@@ -48,9 +48,12 @@
     window.ls = new LispSocket(LS_URI, FILE_PATH);
     window.onkeydown = (e) => {
       if (e.keyCode === 83 && e.ctrlKey) {
-        e.preventDefault()
+        e.preventDefault();
         window.ls.save(document.getElementsByClassName('editcell'));
         return false;
+      } else if (e.keyCode === 82 && e.ctrlKey) {
+        e.preventDefault();
+        window.ls.recall();
       }
     }
     window.editcells = {};

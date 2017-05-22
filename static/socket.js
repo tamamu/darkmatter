@@ -159,7 +159,8 @@ class LispSocket {
 			}
       let sender = JSON.stringify({
         "message": "eval",
-        "data": src
+        "data": src,
+        "file": this.file
       });
       console.log(sender);
 			this.socket.send(sender);
@@ -191,6 +192,23 @@ class LispSocket {
       this.socket.send(sender);
     } else {
       console.log("Can't save the code.");
+    }
+  }
+
+  recall() {
+    if (this.state) {
+      this.socket.onmessage = (e) => {
+        let json = JSON.parse(e.data);
+        let show = document.getElementById('alert');
+        show.innerText = `Recall: new package created at ${(new Date()).toString()})`;
+      }
+      let sender = JSON.stringify({
+        "message": "recall",
+        "file": this.file
+      });
+      this.socket.send(sender);
+    } else {
+      console.log("Can't recall the package.");
     }
   }
 }

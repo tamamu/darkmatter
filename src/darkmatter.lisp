@@ -9,6 +9,9 @@
                 :render-template*)
   (:import-from :string-case
                 :string-case)
+  (:import-from :cl-markup
+                :markup
+                :escape-string)
   (:import-from :alexandria
                 :if-let
                 :read-file-into-string
@@ -25,6 +28,8 @@
 (djula:add-template-directory (asdf:system-relative-pathname "darkmatter" "templates/"))
 (defparameter +base.html+ (djula:compile-template* "base.html"))
 
+(defparameter *local-packages* (make-hash-table :test 'equal))
+
 (defpackage darkmatter.plot
   (:use :cl)
   (:export scatter
@@ -36,6 +41,29 @@
   (data #() :type array))
 (in-package darkmatter)
 
+(defmacro get-package (path)
+  `(gethash ,path *local-packages*))
+
+(defun make-temporary-package (path)
+  (if-let (pkg (gethash path *local-packages*))
+          pkg
+          (let* ((magic (write-to-string (get-universal-time)))
+                 (pkg (make-package (format nil "darkmatter.local.~A" magic)
+                                    :use `(:cl))))
+            (intern "*last-package*" pkg)
+            (use-package pkg 'darkmatter)
+            (setf (gethash path *local-packages*)
+                  pkg)
+            pkg)))
+
+(defun recall-package (path)
+  (let ((pkg (get-package path)))
+    (setf (gethash path *local-packages*) nil)
+    (unuse-package pkg 'darkmatter)
+    (delete-package pkg)
+    (make-temporary-package path)
+    "{}"))
+
 (defpackage darkmatter.local
   (:use :cl)
   (:export *last-package*))
@@ -43,9 +71,12 @@
 (defparameter *last-package* (package-name *package*))
 (in-package :darkmatter)
 
-(defun eval-string (src)
+(defun eval-string (path src)
   (format t "Come: ~A~%" src)
-  (eval `(in-package ,darkmatter.local:*last-package*))
+  (let ((pkg (get-package path)))
+    (if-let (last-package (find-symbol "*last-package*" pkg))
+      (eval `(in-package ,(package-name (symbol-package last-package))))
+      (eval `(in-package ,(package-name pkg))))
   (let* ((*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
          (eo "")
@@ -60,16 +91,17 @@
       (END-OF-FILE (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
     (setf eo (get-output-stream-string *error-output*))
-    (setf darkmatter.local:*last-package* (package-name *package*))
+;    (setf eo "")
+    (setq *last-package* (package-name *package*))
     (in-package :darkmatter)
     (jsown:to-json
-      `(:obj ("return" . ,(format nil "~A" return-value))
+      `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
              ("output" . ,(format nil "~A~A"
                             (if (string= "" eo)
                                 ""
-                                (format nil "<pre>~A</pre>" eo))
+                                (markup (:pre eo)))
                             (string-left-trim '(#\Space #\Newline)
-                              (get-output-stream-string *standard-output*))))))))
+                              (get-output-stream-string *standard-output*)))))))))
 
 (defun save-file (fname src)
   (with-open-file (out fname :direction :output :if-exists :supersede)
@@ -92,11 +124,12 @@
   (get-editable-file path env))
 
 (defun get-editable-file (path env)
-  `(200 (:content-type "text/html")
-    (,(render-template* +base.html+ nil
-                    :host (getf env :server-name)
-                    :port (getf env :server-port)
-                    :path path))))
+  (make-temporary-package path)
+    `(200 (:content-type "text/html")
+      (,(render-template* +base.html+ nil
+                          :host (getf env :server-name)
+                          :port (getf env :server-port)
+                          :path path))))
 
 (defun notfound (env)
   `(404 (:content-type "text/plain") ("404 Not Found")))
@@ -121,9 +154,11 @@
                  (message (jsown:val json "message"))
                  (res (string-case
                         (message)
-                        ("eval" (eval-string (jsown:val json "data")))
+                        ("eval" (eval-string (jsown:val json "file")
+                                             (jsown:val json "data")))
                         ("save" (save-file (jsown:val json "file")
                                            (jsown:val json "data")))
+                        ("recall" (recall-package (jsown:val json "file")))
                         (t "{}"))))
             (send ws res))))
     (lambda (responder)
