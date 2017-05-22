@@ -29,6 +29,7 @@
 (defparameter +base.html+ (djula:compile-template* "base.html"))
 
 (defparameter *local-packages* (make-hash-table :test 'equal))
+(defparameter *package-temp* nil)
 
 (defpackage darkmatter.plot
   (:use :cl)
@@ -46,37 +47,33 @@
 
 (defun make-temporary-package (path)
   (if-let (pkg (gethash path *local-packages*))
-          pkg
+          (car pkg)
           (let* ((magic (write-to-string (get-universal-time)))
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
-                                    :use `(:cl))))
-            (intern "*last-package*" pkg)
+                                    :use `(:cl :darkmatter.plot))))
+            (eval `(in-package ,(package-name pkg)))
+            (defparameter *last-package* nil)
+            (export *last-package*)
+            (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
-                  pkg)
+                  (cons pkg (package-name pkg)))
             pkg)))
 
 (defun recall-package (path)
-  (let ((pkg (get-package path)))
+  (let ((pkg (car (get-package path))))
     (setf (gethash path *local-packages*) nil)
     (unuse-package pkg 'darkmatter)
     (delete-package pkg)
     (make-temporary-package path)
     "{}"))
 
-(defpackage darkmatter.local
-  (:use :cl)
-  (:export *last-package*))
-(in-package :darkmatter.local)
-(defparameter *last-package* (package-name *package*))
-(in-package :darkmatter)
-
 (defun eval-string (path src)
   (format t "Come: ~A~%" src)
   (let ((pkg (get-package path)))
-    (if-let (last-package (find-symbol "*last-package*" pkg))
-      (eval `(in-package ,(package-name (symbol-package last-package))))
-      (eval `(in-package ,(package-name pkg))))
+    (if-let (last-package (cdr pkg))
+      (eval `(in-package ,last-package))
+      (eval `(in-package ,(package-name (car pkg)))))
   (let* ((*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
          (eo "")
@@ -92,7 +89,7 @@
       (error (c) (format t "<pre>~A</pre>" c)))
     (setf eo (get-output-stream-string *error-output*))
 ;    (setf eo "")
-    (setq *last-package* (package-name *package*))
+    (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
     (jsown:to-json
       `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
