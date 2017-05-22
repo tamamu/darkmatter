@@ -1,6 +1,8 @@
 (in-package :cl-user)
 (defpackage darkmatter
   (:use :cl :websocket-driver)
+  (:import-from :lack.builder
+                :builder)
   (:import-from :djula
                 :add-template-directory
                 :compile-template*
@@ -13,6 +15,12 @@
                 :starts-with-subseq)
   (:export *eval-server*))
 (in-package :darkmatter)
+
+(defparameter *root-directory*
+  (asdf:system-relative-pathname "darkmatter" ""))
+
+(defparameter *static-directory*
+  (asdf:system-relative-pathname "darkmatter" "static/"))
 
 (djula:add-template-directory (asdf:system-relative-pathname "darkmatter" "templates/"))
 (defparameter +base.html+ (djula:compile-template* "base.html"))
@@ -69,32 +77,19 @@
   (jsown:to-json
     `(:obj ("return" . ,(format nil "~A" fname)))))
 
-(defun get-mime-type (path)
-  (string-case ((string-upcase (pathname-type path)))
-    ("HTML" "text/html")
-    ("CSS" "text/css")
-    ("JS" "text/javascript")
-    ("JSON" "application/json")
-    ("PNG" "image/png")
-    ("JPEG" "image/jpeg")
-    ("JPG" "image/jpeg")
-    (t "text/plain")))
+(defun read-file (env path)
+  (let ((mime (get-mime-type path)))
+    (with-open-file (stream path :direction :input :if-does-not-exist nil)
+      `(200 (:content-type ,(gethash "content-type" (getf env :headers))
+             :content-length ,(file-length stream))
+      (,path)))))
 
-(defun read-static-file (path)
-  (let ((p (asdf:system-relative-pathname "darkmatter" path)))
-    (if (probe-file p)
-        `(200 (:content-type ,(get-mime-type p))
-          (,(read-file-into-string p)))
-        nil)))
+(defun serve-index ()
+  `(200 (:content-type "text/html")
+    (,(read-file-into-string (merge-pathnames *static-directory* "index.html")))))
 
-(defun read-global-file (path)
-  (if-let (p (probe-file path))
-    (if (pathname-name p)
-        `(200 (:content-type ,(get-mime-type p))
-          (,(read-file-into-string p)))
-        `(200 (:content-type "text/html")
-          ("directory")))
-    nil))
+(defun read-global-file (env path)
+  (get-editable-file path env))
 
 (defun get-editable-file (path env)
   `(200 (:content-type "text/html")
@@ -103,37 +98,61 @@
                     :port (getf env :server-port)
                     :path path))))
 
-(defun notfound ()
-  (read-static-file "static/404.html"))
+(defun notfound (env)
+  `(404 (:content-type "text/plain") ("404 Not Found")))
 
-(defvar *eval-server*
+(defun websocket-p (env)
+  (string= "websocket" (gethash "upgrade" (getf env :headers))))
+
+(defparameter *websocket-binder*
+  (lambda (app bind)
+    (lambda (env)
+      (if (websocket-p env)
+        (funcall bind env)
+        (funcall app env))))
+  "Middleware for binding websocket message")
+
+(defun bind-message (env)
+  "Bind websocket messages"
+  (let ((ws (make-server env)))
+    (on :message ws
+        (lambda (message)
+          (let* ((json (jsown:parse message))
+                 (message (jsown:val json "message"))
+                 (res (string-case
+                        (message)
+                        ("eval" (eval-string (jsown:val json "data")))
+                        ("save" (save-file (jsown:val json "file")
+                                           (jsown:val json "data")))
+                        (t "{}"))))
+            (send ws res))))
+    (lambda (responder)
+      (declare (ignore responder))
+      (start-connection ws))))
+
+(defparameter *eval-server*
   (lambda (env)
-    (if (string= "websocket" (gethash "upgrade" (getf env :headers)))
-        (let ((ws (make-server env)))
-          (on :message ws
-              (lambda (message)
-                (let* ((json (jsown:parse message))
-                       (message (jsown:val json "message"))
-                       (res
-                         (string-case (message)
-                           ("eval" (eval-string (jsown:val json "data")))
-                           ("save" (save-file (jsown:val json "file")
-                                              (jsown:val json "data")))
-                           (t "{}"))))
-                  (send ws res))))
-          (lambda (responder)
-            (declare (ignore responder))
-            (start-connection ws)))
-        (let ((uri (getf env :request-uri)))
-          (if (string= "/" uri)
-              (read-static-file "static/index.html")
-              (let ((path (subseq uri 1)))
-                (if (starts-with-subseq "//" uri :test #'string=)
-                    (if-let (data (read-global-file path))
-                            data
-                            (if (string= "LISP" (string-upcase (pathname-type path)))
-                                (get-editable-file path env)
-                                (notfound)))
-                    (if-let (data (read-static-file path))
-                          data
-                          (notfound)))))))))
+    (let ((uri (getf env :request-uri)))
+      (if (string= "/" uri)
+        (serve-index)
+        (let ((path (subseq uri 1)))
+          (if-let (data (read-global-file env path))
+                  data
+                  (if (string= "LISP" (string-upcase (pathname-type path)))
+                    (get-editable-file path env)
+                    (notfound env)))))))
+  "File server")
+
+(setf *eval-server*
+(builder
+  (:static :path (lambda (path)
+                   (if (or (starts-with-subseq "/static/" path)
+                           (starts-with-subseq "/bower_components/" path))
+                     path
+                     nil))
+           :root *root-directory*)
+  *eval-server*))
+
+(setf *eval-server*
+      (funcall *websocket-binder* *eval-server* #'bind-message))
+
