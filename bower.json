@@ -15,8 +15,8 @@
     "tests"
   ],
   "dependencies": {
-    "juicy-ace-editor": "^2.0.0",
-    "polymer": "Polymer/polymer#^2.0.0-rc.3",
-    "d3": "^4.8.0"
+    "d3": "^4.8.0",
+    "katex": "^0.7.1",
+    "ace-builds": "^1.2.6"
   }
 }

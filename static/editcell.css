@@ -1,0 +1,34 @@
+div.editcell {
+  display: flex;
+  width: 80vw;
+  flex-direction: column;
+  box-shadow: 10px 10px rgba(0,0,0,0.2);
+}
+
+div.editcell div.cache {
+  display: none;
+}
+
+div.editcell div#editor {
+  min-height: 5em;
+}
+
+div.editcell div#output {
+  display: none;
+  background-color: #fff;
+  min-height: 5em;
+  overflow-y: scroll;
+  max-height: 8em;
+}
+
+div.editcell div#output.show {
+  display: inherit;
+  flex-direction: column;
+}
+
+div.editcell div#output div#result {
+  width: 100%;
+  background-color: #ddd;
+  color: #3f51b5;
+  font-weight: bold;
+}

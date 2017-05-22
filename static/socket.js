@@ -14,7 +14,8 @@ class LispSocket {
 			this.state = false;
 		}
 		this.socket.onerror = (e) => {
-			console.log(e);
+			console.log('Error');
+      console.log(e);
 		}
 	}
 
@@ -153,7 +154,7 @@ class LispSocket {
 				let json = JSON.parse(e.data);
 				console.log(`Result:${json['return']}`);
 				let result = this.parse(json['output']);
-				output.innerHTML = `<p>=> ${json['return']}</p>`;
+				output.innerHTML = `<div id="result"> ${json['return']}</div>`;
 				output.innerHTML += result;
 			}
       let sender = JSON.stringify({
@@ -167,12 +168,13 @@ class LispSocket {
 		}
 	}
 
-  save(editors) {
+  save(cells) {
     if (this.state && this.modified) {
       let src = "";
-      for (let editor of editors) {
-        src += editor.$.editor.value + "\n";
-        src += "#|OUTPUT\n" + editor.$.output.innerHTML + "\n|#\n";
+      for (let cell of cells) {
+        let ec = window.editcells[cell.id];
+        src += ec.value + "\n";
+        src += "#|OUTPUT\n" + ec.output.innerHTML + "\n|#\n";
       }
       this.socket.onmessage = (e) => {
         let json = JSON.parse(e.data);
@@ -193,16 +195,3 @@ class LispSocket {
   }
 }
 
-window.onload = () => {
-	window.ls = new LispSocket(LS_URI, FILE_PATH);
-  window.onkeydown = (e) => {
-    if (e.keyCode === 83 && e.ctrlKey) {
-      e.preventDefault()
-      window.ls.save(document.getElementsByTagName('custom-element'));
-      return false;
-    }
-  }
-	let container = document.getElementById('dm-container');
-	let initial = document.getElementById('dm-initial');
-	initial.connect(ls, container);
-}

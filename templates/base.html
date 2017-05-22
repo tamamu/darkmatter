@@ -8,11 +8,13 @@
     const FILE_PATH = "{{ path }}"
 	</script>
 	<script src="/bower_components/d3/d3.js"></script>
-	<script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-	<link rel="import" href="/bower_components/polymer/polymer.html">
-	<link rel="import" href="/static/custom-element.html">
+  <script src="/bower_components/ace-builds/src-min/ace.js"></script>
+  <script src="/bower_components/katex/dist/katex.min.js"></script>
+  <link rel="stylesheet" href="/bower_components/katex/dist/katex.min.css">
 	<script src="/static/parse.js"></script>
-	<script src="/static/socket.js"></script>
+  <script src="/static/socket.js"></script>
+  <link rel="stylesheet" href="/static/editcell.css">
+  <script src="/static/generateCell.js"></script>
 	<style>
 		body {
 			margin: 0;
@@ -36,7 +38,31 @@
 	<h1>Darkmatter</h1>
   <p id="alert"></p>
 	<div id="dm-container">
-		<custom-element id="dm-initial"><custom-element>
+    <div class="editcell" id="dm-initial" data-lang="lisp">
+      <div id="lisp" class="cache"></div>
+      <div id="md" class="cache"></div>
+    </div>
 	</div>
+  <script>
+  window.onload = () => {
+    window.ls = new LispSocket(LS_URI, FILE_PATH);
+    window.onkeydown = (e) => {
+      if (e.keyCode === 83 && e.ctrlKey) {
+        e.preventDefault()
+        window.ls.save(document.getElementsByClassName('editcell'));
+        return false;
+      }
+    }
+    window.editcells = {};
+    let cells = document.getElementsByClassName('editcell');
+    let container = document.getElementById('dm-container');
+    for (cell of cells) {
+      let instance = EditCell.fromElement(cell);
+      window.editcells[cell.id] = instance;
+      EditCell.connect(window.ls, instance, container);
+    }
+  }
+  </script>
+
 </body>
 </html>
