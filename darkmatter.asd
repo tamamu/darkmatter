@@ -21,7 +21,8 @@
 							 :jsown
                :djula
                :string-case
-               :alexandria)
+               :alexandria
+               :cl-markup)
   :components ((:module "src"
                 :components
                 ((:file "darkmatter"))))
