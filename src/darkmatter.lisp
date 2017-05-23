@@ -54,6 +54,7 @@
             (eval `(in-package ,(package-name pkg)))
             (defparameter *last-package* nil)
             (export *last-package*)
+            (setf *default-pathname-defaults* (pathname path))
             (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
