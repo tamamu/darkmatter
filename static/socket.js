@@ -171,11 +171,17 @@ class LispSocket {
 
   save(cells) {
     if (this.state && this.modified) {
-      let src = "";
+      let data = [];
       for (let cell of cells) {
         let ec = window.editcells[cell.id];
-        src += ec.value + "\n";
-        src += "#|OUTPUT\n" + ec.output.innerHTML + "\n|#\n";
+        let d = {
+          "lisp": cell.querySelector('#lisp').innerHTML,
+          "md": cell.querySelector('#md').innerHTML,
+          "lang": cell.dataset.lang,
+          "output": cell.querySelector('#output').innerHTML
+        };
+        d[cell.dataset.lang] = ec.value;
+        data.push(d);
       }
       this.socket.onmessage = (e) => {
         let json = JSON.parse(e.data);
@@ -187,7 +193,7 @@ class LispSocket {
       let sender = JSON.stringify({
         "message": "save",
         "file": this.file,
-        "data": src
+        "data": data
       });
       this.socket.send(sender);
     } else {

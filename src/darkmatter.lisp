@@ -101,11 +101,20 @@
                             (string-left-trim '(#\Space #\Newline)
                               (get-output-stream-string *standard-output*)))))))))
 
-(defun save-file (fname src)
-  (with-open-file (out fname :direction :output :if-exists :supersede)
-    (format out "~A" src))
-  (jsown:to-json
-    `(:obj ("return" . ,(format nil "~A" fname)))))
+(defun save-file (fname data)
+  (let ((res (list)))
+    (print data)
+    (loop for d in data
+          for c = `((:lang . ,(jsown:val d "lang"))
+                    (:lisp . ,(jsown:val d "lisp"))
+                    (:md . ,(jsown:val d "md"))
+                    (:output . ,(jsown:val d "output")))
+          do (setf res (append res (list c))))
+    (print (length res))
+    (with-open-file (out fname :direction :output :if-exists :supersede)
+      (print res out))
+    (jsown:to-json
+      `(:obj ("return" . ,(format nil "~A" fname))))))
 
 (defun read-file (env path)
   (let ((mime (get-mime-type path)))
