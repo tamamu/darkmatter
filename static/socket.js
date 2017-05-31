@@ -175,6 +175,8 @@ class LispSocket {
       for (let cell of cells) {
         let ec = window.editcells[cell.id];
         let d = {
+          "id": cell.id,
+          "next": cell.dataset.next || '',
           "lisp": cell.querySelector('#lisp').innerHTML,
           "md": cell.querySelector('#md').innerHTML,
           "lang": cell.dataset.lang,

@@ -105,7 +105,9 @@
   (let ((res (list)))
     (print data)
     (loop for d in data
-          for c = `((:lang . ,(jsown:val d "lang"))
+          for c = `((:id . ,(jsown:val d "id"))
+                    (:next . ,(jsown:val d "next"))
+                    (:lang . ,(jsown:val d "lang"))
                     (:lisp . ,(jsown:val d "lisp"))
                     (:md . ,(jsown:val d "md"))
                     (:output . ,(jsown:val d "output")))
@@ -128,15 +130,23 @@
     (,(read-file-into-string (merge-pathnames *static-directory* "index.html")))))
 
 (defun read-global-file (env path)
-  (get-editable-file path env))
+  (if (string= "LISP"
+               (string-upcase (pathname-type path)))
+      (get-editable-file path env)
+      (if (probe-file path)
+        (read-file env path)
+        (notfound env))))
 
 (defun get-editable-file (path env)
   (make-temporary-package path)
-    `(200 (:content-type "text/html")
-      (,(render-template* +base.html+ nil
-                          :host (getf env :server-name)
-                          :port (getf env :server-port)
-                          :path path))))
+  (with-open-file (in path :direction :input)
+    (let ((editcells (read in)))
+      `(200 (:content-type "text/html")
+        (,(render-template* +base.html+ nil
+                            :editcells editcells
+                            :host (getf env :server-name)
+                            :port (getf env :server-port)
+                            :path path))))))
 
 (defun notfound (env)
   `(404 (:content-type "text/plain") ("404 Not Found")))
