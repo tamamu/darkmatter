@@ -1,0 +1,18 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| The notebook-style Common Lisp environment
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (unless (find-package :darkmatter)
+    #+quicklisp (ql:quickload '(:darkmatter) :silent t)))
+
+(defpackage #:ros/script/darkm
+  (:use #:cl))
+(in-package #:ros/script/darkm)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (ql:quickload :darkmatter :silent t)
+  (darkmatter:start :server :woo :port 8888 :use-thread nil))
+;;; vim: set ft=lisp lisp:

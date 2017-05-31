@@ -1,6 +1,8 @@
 (in-package :cl-user)
 (defpackage darkmatter
   (:use :cl :websocket-driver)
+  (:import-from :clack
+                :clackup)
   (:import-from :lack.builder
                 :builder)
   (:import-from :djula
@@ -16,8 +18,13 @@
                 :if-let
                 :read-file-into-string
                 :starts-with-subseq)
-  (:export *eval-server*))
+  (:export :start :stop :*eval-server*))
 (in-package :darkmatter)
+
+(defparameter *appfile-path*
+  (asdf:system-relative-pathname "darkmatter" #P"app.lisp"))
+
+(defvar *handler* nil)
 
 (defparameter *root-directory*
   (asdf:system-relative-pathname "darkmatter" ""))
@@ -208,3 +215,17 @@
 (setf *eval-server*
       (funcall *websocket-binder* *eval-server* #'bind-message))
 
+(defun start (&rest args &key server port &allow-other-keys)
+  (declare (ignore server port))
+  (when *handler*
+    (restart-case (error "Darkmatter is already running.")
+      (restart-darkmatter ()
+        :report "Restart Darkmatter"
+        (stop))))
+  (setf *handler*
+        (apply #'clackup *appfile-path* args)))
+
+(defun stop ()
+  (prog1
+    (clack:stop *handler*)
+    (setf *handler* nil)))
