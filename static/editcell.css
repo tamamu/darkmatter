@@ -28,7 +28,7 @@ div.editcell div#output.show {
 
 div.editcell div#output div#result {
   width: 100%;
-  background-color: #ddd;
-  color: #3f51b5;
+  background-color: #616161;
+  color: #ececec;
   font-weight: bold;
 }

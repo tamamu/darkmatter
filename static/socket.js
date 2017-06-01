@@ -177,6 +177,7 @@ class LispSocket {
         let d = {
           "id": cell.id,
           "next": cell.dataset.next || '',
+          "count": cell.dataset.count || 0,
           "lisp": cell.querySelector('#lisp').innerHTML,
           "md": cell.querySelector('#md').innerHTML,
           "lang": cell.dataset.lang,

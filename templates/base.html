@@ -20,7 +20,8 @@
 			margin: 0;
 			padding: 0;
 			width: 100vw;
-			background-color: #f0f0f0;
+			background-color: #263238;
+      color: #f6f2f8;
 		}
 		table, td, th {
 			border: 1px black solid;
@@ -28,18 +29,114 @@
 		#dm-container {
 			display: flex;
 			flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #455A64;
 		}
-		custom-element {
-			margin: 10px auto;
-		}
+
+    div.editcell {
+      margin: 1em 0;
+      color: black;
+      border-top: solid 4px #757575;
+    }
+    div.editcell div#output {
+      color: #ececec;
+      background-color: #424242;
+    }
+    div.editcell table {
+      border-color: #ececec;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+    div.editcell table * {
+      border-color: #ececec;
+    }
+
+    header {
+      display: flex;
+      flex-direction: row;
+      padding: 0 2em;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 20px;
+    }
+    header p#alert {
+      font-size: 12px;
+      overflow: hidden;
+      margin-left: auto;
+      margin-top: auto;
+    }
+    nav {
+      display: flex;
+      flex-direction: row;
+      height: 2em;
+    }
+    nav ul {
+      display: flex;
+      align-items: center;
+      list-style: none;
+    }
+    nav ul#menubar li {
+      font-size: 13px;
+      padding: 0.5em 2em;
+      transition: background-color .1s;
+    }
+    nav ul#menubar li:hover {
+      background-color: #37474F;
+    }
+    .hidden {
+      display: none;
+    }
+    ul.submenu {
+      padding: 0 0 0 2em;
+      display: block;
+      position: absolute;
+      visibility: hidden;
+      width: 10em;
+      background-color: #263238;
+      text-align: left;
+    }
+    nav ul#menubar li ul.submenu li {
+      padding: 0;
+    }
+    ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
+      visibility: visible;
+    }
+   #drawer {
+      display: none;
+    }
 	</style>
  </head>
 <body unresolved>
-	<h1>Darkmatter</h1>
-  <p id="alert"></p>
+  <header>
+    <h1>Darkmatter Notebook</h1>
+    <p id="alert" class="right"></p>
+  </header>
+  <nav>
+    <ul id="menubar">
+      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-file">
+        <label for="menu-file">File</label>
+        <ul class="submenu">
+          <li>Save</li>
+        </ul>
+      </li>
+      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-edit">
+        <label for="menu-edit">Edit</label>
+        <ul class="submenu">
+          <li>Add cell below</li>
+        </ul>
+      </li>
+      <li><label>View<input class="hidden" type="checkbox" name="menuitem"></label></li>
+      <li><label>Tools<input class="hidden" type="checkbox" name="menuitem"></label></li>
+    </ul>
+  </nav>
+  <div id="drawer">
+
+  </div>
   <div id="dm-container">
     {% for data in editcells %}
-    <div class="editcell" id="{{ data.id }}" data-next="{{ data.next }}" data-lang="{{ data.lang }}">
+    <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}"data-next="{{ data.next }}" data-lang="{{ data.lang }}">
       <div id="lisp" class="cache">{{ data.lisp | safe }}</div>
       <div id="md" class="cache">{{ data.md | safe }}</div>
       <div id="editor"></div>
