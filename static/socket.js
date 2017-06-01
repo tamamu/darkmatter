@@ -178,8 +178,8 @@ class LispSocket {
           "id": cell.id,
           "next": cell.dataset.next || '',
           "count": cell.dataset.count || 0,
-          "lisp": cell.querySelector('#lisp').innerHTML,
-          "md": cell.querySelector('#md').innerHTML,
+          "lisp": cell.querySelector('#lisp').dataset.content,
+          "md": cell.querySelector('#md').dataset.content,
           "lang": cell.dataset.lang,
           "output": cell.querySelector('#output').innerHTML
         };

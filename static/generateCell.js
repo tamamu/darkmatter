@@ -43,7 +43,7 @@ class EditCell {
     obj.editor = EditCell.createEditor(obj.container);
     let lang = elm.dataset.lang;
     if (lang) {
-      obj.editor.getSession().setValue(obj.caches[lang].innerHTML);
+      obj.editor.getSession().setValue(obj.caches[lang].dataset.content);
     }
     window.editcells[elm.id] = obj;
     return obj;
@@ -58,10 +58,12 @@ class EditCell {
     let lispCache = document.createElement('div');
     lispCache.id = 'lisp';
     lispCache.className = 'cache';
+    lispCache.dataset.content = '';
     obj.caches['lisp'] = lispCache;
     let mdCache = document.createElement('div');
     mdCache.id = 'md';
     mdCache.className = 'cache'
+    mdCacde.dataset.content = '';
     obj.caches['md'] = mdCache;
     obj.container = document.createElement('div');
     obj.container.id = 'editor';
@@ -156,9 +158,9 @@ class EditCell {
 				} else if (e.ctrlKey && e.keyCode === 73) {
           console.log(ec.caches);
           console.log(ec.lang);
-          ec.caches[ec.lang].innerText = ec.value;
+          ec.caches[ec.lang].dataset.content = ec.value;
           ec.changeLang();
-          ec.setValue(ec.caches[ec.lang].innerText);
+          ec.setValue(ec.caches[ec.lang].dataset.content);
           e.preventDefault();
         }
         if (!(e.ctrlKey && e.keyCode === 83)) {

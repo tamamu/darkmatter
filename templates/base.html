@@ -137,8 +137,8 @@
   <div id="dm-container">
     {% for data in editcells %}
     <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}"data-next="{{ data.next }}" data-lang="{{ data.lang }}">
-      <div id="lisp" class="cache">{{ data.lisp | safe }}</div>
-      <div id="md" class="cache">{{ data.md | safe }}</div>
+      <div id="lisp" class="cache" data-content="{{ data.lisp }}"></div>
+      <div id="md" class="cache" data-content="{{ data.md }}"></div>
       <div id="editor"></div>
       <div id="output" {% ifnotequal data.output "" %}class="show"{% endifnotequal %}>{{ data.output | safe }}</div>
     </div>
