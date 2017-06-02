@@ -3,7 +3,9 @@ const NumberExp = /[+-]?[0-9]+[.]?[0-9]([eE][+-])?[0-9]*/;
 const WhiteSpaceExp = /\s/;
 
 function arrayToList(obj) {
-	if (typeof(obj) === 'object') {
+  console.log(obj);
+  console.log(typeof(obj));
+	if (typeof(obj) === 'object' && !Array.isArray(obj)) {
 		return obj.children.map(this.arrayToList);
 	}
 
@@ -62,6 +64,9 @@ function parseList(src, idx) {
 				[tmp, idx] = parseSharp(src, idx+1);
 				res.push(tmp);
 				break;
+      case "'":
+        idx++;
+        break;
 			case '(':
 				[tmp, idx] = parseList(src, idx+1);
 				res.push(tmp);
