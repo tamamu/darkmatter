@@ -37,7 +37,20 @@
     div.editcell {
       margin: 1em 0;
       color: black;
-      border-top: solid 4px #757575;
+    }
+    div.editcell:before {
+      font-size: 10px;
+      background-color: #757575;
+    }
+    div.editcell[data-lang="lisp"]:before {
+      color: white;
+      font-weight: bold;
+      content: 'Common Lisp';
+    }
+    div.editcell[data-lang="md"]:before {
+      color: white;
+      font-weight: bold;
+      content: 'Markdown';
     }
     div.editcell div#output {
       color: #ececec;
@@ -156,12 +169,14 @@
         <label for="menu-file">File</label>
         <ul class="submenu">
           <li onclick="window.ls.save(document.getElementsByClassName('editcell'));">Save</li>
+          <li onclick="window.ls.recall();">Recall package</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-edit">
         <label for="menu-edit">Edit</label>
         <ul class="submenu">
-          <li>Add cell below</li>
+          <li onclick="alert('Not implemented');">Change cell language</li>
+          <li onclick="alert('Not implemented');">Add cell below</li>
         </ul>
       </li>
       <li><label>View<input class="hidden" type="checkbox" name="menuitem"></label></li>
