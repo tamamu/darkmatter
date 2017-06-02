@@ -17,6 +17,7 @@
   "dependencies": {
     "d3": "^4.8.0",
     "katex": "^0.7.1",
-    "ace-builds": "^1.2.6"
+    "ace-builds": "^1.2.6",
+    "marked": "^0.3.6"
   }
 }

@@ -136,9 +136,7 @@ class EditCell {
                   break;
                 case 'md':
                   console.log('katex evaluated');
-                  katex.render(contents, ec.output, {
-                    displayMode: true
-                  });
+                  ls.markdown(contents, ec.output);
                   break;
               }
               if (e.shiftKey) {
@@ -148,8 +146,11 @@ class EditCell {
                   EditCell.connect(ls, instance, parent);
                   ec.cell.dataset.next = instance.id;
                   instance.editor.focus();
+                  parent.scrollTop = instance.offsetTop - 82;
                 } else {
-                  window.editcells[ec.next].editor.focus();
+                  let cell = window.editcells[ec.next];
+                  cell.editor.focus();
+                  parent.scrollTop = cell.element.offsetTop - 82;
                 }
               }
             }
@@ -169,3 +170,5 @@ class EditCell {
 			};
 		}
 }
+
+

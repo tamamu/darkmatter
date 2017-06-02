@@ -5,7 +5,29 @@ class LispSocket {
 		this.state = false;
     this.file = filepath;
     this.modified = false;
+    window.addEventListener('beforeunload', (e) => {
+      if (this.modified) {
+        e.returnValue = "If you don't save the note, changes from the last minute will be lost.";
+      }
+    }, false);
     this.indicator = indicator;
+    this.renderer = new marked.Renderer();
+    let originalCode = this.renderer.code.bind(this.renderer);
+    this.renderer.code = (code, lang, escaped) => {
+      let math;
+      if (!lang && (math = this.renderLatex(code))) {
+        return math;
+      }
+      return originalCode(code, lang, escaped);
+    };
+    let originalCodeSpan = this.renderer.codespan.bind(this.renderer);
+    this.renderer.codespan = (text) => {
+      let math;
+      if (math = this.renderLatex(text)) {
+        return math;
+      }
+      return originalCodeSpan(text);
+    };
 		this.socket.onopen = (e) => {
 			console.log('Connected.');
       this.indicator.className = 'connected';
@@ -21,6 +43,30 @@ class LispSocket {
       console.log(e);
 		}
 	}
+
+  renderLatex(expr) {
+    console.log('render latex');
+    if (expr[0] === '$' && expr[expr.length-1] === '$') {
+      let displayStyle = false;
+      expr = expr.substr(1, expr.length-2);
+      if (expr[0] === '$' && expr[expr.length-1] === '$') {
+        displayStyle = true;
+        expr = '\\displaystyle ' + expr.substr(1, expr.length-2);
+      }
+      let html;
+      try {
+        html = katex.renderToString(expr, {throwOnError: false});
+      } catch (e) {
+        html = e;
+      }
+      if (displayStyle) {
+        html = html.replace(/class=\"katex\"/g, 'class="katex katex-block" style="display: block;"');
+      }
+      return html;
+    } else {
+      return null;
+    }
+  }
 
 	plotScatter(dict) {
 		let vec = arrayToList(dict[":DATA"]);
@@ -151,13 +197,23 @@ class LispSocket {
 		return res;
 	}
 
+  markdown(src, output) {
+    let result = marked(src, {renderer: this.renderer});
+    output.innerHTML = result;
+  }
+
 	eval(src, output) {
 		if (this.state) {
 			this.socket.onmessage = (e) => {
 				let json = JSON.parse(e.data);
 				console.log(`Result:${json['return']}`);
+        let returnVal = json['return'];
+        if (returnVal.length > 70) {
+          returnVal = returnVal.substr(0, 65);
+          returnVal += '...';
+        }
 				let result = this.parse(json['output']);
-				output.innerHTML = `<div id="result"> ${json['return']}</div>`;
+				output.innerHTML = `<div id="result"> ${returnVal}</div>`;
 				output.innerHTML += result;
 			}
       let sender = JSON.stringify({

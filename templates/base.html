@@ -7,9 +7,10 @@
 		const LS_URI = "ws://{{ host }}:{{ port }}";
     const FILE_PATH = "{{ path }}";
 	</script>
-	<script src="/static/components/d3/d3.js"></script>
+	<script src="/static/components/d3/d3.min.js"></script>
   <script src="/static/components/ace/ace.js"></script>
   <script src="/static/components/katex/katex.min.js"></script>
+  <script src="/static/components/marked/marked.min.js"></script>
   <link rel="stylesheet" href="/static/components/katex/katex.min.css">
 	<script src="/static/parse.js"></script>
   <script src="/static/socket.js"></script>
@@ -58,6 +59,10 @@
     div.editcell div#output {
       color: #ececec;
       background-color: #424242;
+    }
+    div.editcell[data-lang="md"] div#output {
+      overflow-y: auto;
+      max-height: none;
     }
     div.editcell table {
       border-color: #ececec;
@@ -154,6 +159,8 @@
     }
     nav ul#menubar li ul.submenu li {
       width: 100%;
+      text-align: left;
+      padding-left: 1em;
     }
     ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
       visibility: visible;
@@ -173,14 +180,14 @@
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-file">
         <label for="menu-file">File</label>
         <ul class="submenu">
-          <li onclick="window.ls.save(document.getElementsByClassName('editcell'));">Save</li>
-          <li onclick="window.ls.recall();">Recall package</li>
+          <li onclick="window.ls.save(document.getElementsByClassName('editcell'));">Save (Ctrl-s)</li>
+          <li onclick="window.ls.recall();">Recall package (Ctrl-r)</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-edit">
         <label for="menu-edit">Edit</label>
         <ul class="submenu">
-          <li onclick="alert('Not implemented');">Change cell language</li>
+          <li onclick="alert('Not implemented');">Change cell language (Ctrl-i)</li>
           <li onclick="alert('Not implemented');">Add cell below</li>
         </ul>
       </li>
