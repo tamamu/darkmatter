@@ -1,11 +1,11 @@
 #!/bin/sh
 #|-*- mode:lisp -*-|#
 #| The notebook-style Common Lisp environment
-exec ros -Q -- $0 "$@"
+exec ros -Q -m darkmatter -L sbcl-bin -- $0 "$@"
 |#
 (progn ;;init forms
   (unless (find-package :darkmatter)
-    #+quicklisp (ql:quickload '(:darkmatter) :silent t)))
+    (ql:quickload '(:darkmatter) :silent t)))
 
 (defpackage #:ros/script/darkm
   (:use #:cl))
@@ -13,6 +13,5 @@ exec ros -Q -- $0 "$@"
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (ql:quickload :darkmatter :silent t)
   (darkmatter:start :server :woo :port 8888 :use-thread nil))
 ;;; vim: set ft=lisp lisp:
