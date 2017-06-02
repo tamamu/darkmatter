@@ -1,16 +1,19 @@
 
 class LispSocket {
-	constructor(uri, filepath) {
+	constructor(uri, filepath, indicator) {
 		this.socket = new WebSocket(uri);
 		this.state = false;
     this.file = filepath;
     this.modified = false;
+    this.indicator = indicator;
 		this.socket.onopen = (e) => {
 			console.log('Connected.');
+      this.indicator.className = 'connected';
 			this.state = true;
 		};
 		this.socket.onclose = (e) => {
 			console.log('Closed.');
+      this.indicator.className = 'notconnected';
 			this.state = false;
 		}
 		this.socket.onerror = (e) => {

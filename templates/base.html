@@ -71,6 +71,7 @@
       display: flex;
       flex-direction: row;
       height: 2em;
+      align-items: center;
     }
     nav ul {
       display: flex;
@@ -93,6 +94,33 @@
       justify-content: center;
       width: 100%;
       height: 100%;
+    }
+    nav #indicator {
+      background-color: #ececec;
+      border-radius: 8px;
+      color: black;
+      width: 100px;
+      height: 10px;
+      padding: 3px;
+      border: 2px solid white;
+    }
+    nav #indicator.connected {
+      background-color: #449944;
+      color: white;
+    }
+    nav #indicator.notconnected {
+      background-color: #994444;
+      color: white;
+    }
+    nav #indicator.connected:before {
+      position: absolute;
+      content: 'Connected';
+      font-size: 10px;
+    }
+    nav #indicator.notconnected:before {
+      position: absolute;
+      content: 'Not Connected';
+      font-size: 10px;
     }
     .hidden {
       display: none;
@@ -139,6 +167,7 @@
       <li><label>View<input class="hidden" type="checkbox" name="menuitem"></label></li>
       <li><label>Tools<input class="hidden" type="checkbox" name="menuitem"></label></li>
     </ul>
+    <p id="indicator" class="notconnected"></p>
   </nav>
   <div id="drawer">
 
@@ -155,7 +184,8 @@
 	</div>
   <script>
   window.onload = () => {
-    window.ls = new LispSocket(LS_URI, FILE_PATH);
+    let connector = document.getElementById('indicator');
+    window.ls = new LispSocket(LS_URI, FILE_PATH, connector);
     window.onkeydown = (e) => {
       if (e.keyCode === 83 && e.ctrlKey) {
         e.preventDefault();
