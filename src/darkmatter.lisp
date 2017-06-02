@@ -121,15 +121,20 @@
                     (:output . ,(jsown:val d "output")))
           do (setf res (append res (list c))))
     (print (length res))
-    (with-open-file (out fname :direction :output :if-exists :supersede)
-      (print res out))
-    (jsown:to-json
-      `(:obj ("return" . ,(format nil "~A" fname))))))
+    (push :darkmatter res)
+    (let ((path fname))
+      (unless (ensure-directories-exist fname)
+          (setf path "./tmp.dm.lisp"))
+      (with-open-file (out path :direction :output :if-exists :supersede)
+        (print res out))
+      (jsown:to-json
+        `(:obj ("return" . ,(format nil "~A" fname)))))))
 
 (defun read-file (env path)
-  (let ((mime (get-mime-type path)))
+  (format t "read: ~A~%" path)
+  (let ((mime (gethash "content-type" (getf env :headers))))
     (with-open-file (stream path :direction :input :if-does-not-exist nil)
-      `(200 (:content-type ,(gethash "content-type" (getf env :headers))
+      `(200 (:content-type ,mime
              :content-length ,(file-length stream))
       (,path)))))
 
@@ -138,14 +143,16 @@
     (,(read-file-into-string (merge-pathnames *static-directory* "index.html")))))
 
 (defun read-global-file (env path)
-  (if (string= "LISP"
-               (string-upcase (pathname-type path)))
-      (if (probe-file path)
+  (let ((fp (probe-file path)))
+    (if (string= "LISP" (string-upcase (pathname-type path)))
+      (if fp
           (get-editable-file path env)
           (new-editable-file path env))
-      (if (probe-file path)
-        (read-file env path)
-        (notfound env))))
+      (if fp
+        (if (pathname-name fp)
+            (read-file env path)
+            (notfound env)) ;; Open directory
+        (notfound env)))))
 
 (defun new-editable-file (path env)
   (make-temporary-package path)
@@ -158,12 +165,15 @@
 (defun get-editable-file (path env)
   (make-temporary-package path)
   (with-open-file (in path :direction :input)
-    `(200 (:content-type "text/html")
-      (,(render-template* +base.html+ nil
-                          :editcells editcells
-                          :host (getf env :server-name)
-                          :port (getf env :server-port)
-                          :path path)))))
+    (let ((editcells (read in)))
+      (if (eq :darkmatter (car editcells))
+        `(200 (:content-type "text/html")
+          (,(render-template* +base.html+ nil
+                              :editcells (cdr editcells)
+                              :host (getf env :server-name)
+                              :port (getf env :server-port)
+                              :path path)))
+        (notfound env)))))
 
 (defun notfound (env)
   `(404 (:content-type "text/plain") ("404 Not Found")))
