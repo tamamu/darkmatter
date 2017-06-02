@@ -63,7 +63,7 @@ class EditCell {
     let mdCache = document.createElement('div');
     mdCache.id = 'md';
     mdCache.className = 'cache'
-    mdCacde.dataset.content = '';
+    mdCache.dataset.content = '';
     obj.caches['md'] = mdCache;
     obj.container = document.createElement('div');
     obj.container.id = 'editor';
