@@ -1,13 +1,24 @@
 # Darkmatter
 
+![Screen Shot](screenshots/screenshot.png)
+
+## Requirement
+
+* <https://github.com/roswell/roswell>
+* Your favorite web browser (Google Chrome, Firefox...)
+
+## Installation
+
+```
+$ ros install tamamu/darkmatter
+```
+
 ## Usage
 
 ```
-$ clackup app.lisp --server :woo --port 8888
+$ darkm
 # Open localhost:8888//path/to/file.lisp in your browser!
 ```
-
-## Installation
 
 ## Author
 
