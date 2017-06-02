@@ -140,21 +140,30 @@
 (defun read-global-file (env path)
   (if (string= "LISP"
                (string-upcase (pathname-type path)))
-      (get-editable-file path env)
+      (if (probe-file path)
+          (get-editable-file path env)
+          (new-editable-file path env))
       (if (probe-file path)
         (read-file env path)
         (notfound env))))
 
+(defun new-editable-file (path env)
+  (make-temporary-package path)
+  `(200 (:content-type "text/html")
+    (,(render-template* +base.html+ nil
+                        :host (getf env :server-name)
+                        :port (getf env :server-port)
+                        :path path))))
+
 (defun get-editable-file (path env)
   (make-temporary-package path)
   (with-open-file (in path :direction :input)
-    (let ((editcells (read in)))
-      `(200 (:content-type "text/html")
-        (,(render-template* +base.html+ nil
-                            :editcells editcells
-                            :host (getf env :server-name)
-                            :port (getf env :server-port)
-                            :path path))))))
+    `(200 (:content-type "text/html")
+      (,(render-template* +base.html+ nil
+                          :editcells editcells
+                          :host (getf env :server-name)
+                          :port (getf env :server-port)
+                          :path path)))))
 
 (defun notfound (env)
   `(404 (:content-type "text/plain") ("404 Not Found")))
