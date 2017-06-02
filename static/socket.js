@@ -198,7 +198,7 @@ class LispSocket {
 	}
 
   markdown(src, output) {
-    let result = marked(src, {renderer: this.renderer});
+    let result = marked(src, {breaks: true, renderer: this.renderer});
     output.innerHTML = result;
   }
 
