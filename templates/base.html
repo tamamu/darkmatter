@@ -42,7 +42,53 @@
       align-items: center;
       background-color: #455A64;
       overflow-y: scroll;
-		}
+    }
+
+    div.editcell div#output.slide {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      max-height: none;
+      left: 0;
+      top: 0;
+      margin: 0;
+      z-index: 200;
+      overflow: hidden;
+      font-size: 3vw;
+    }
+    div.editcell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
+      margin-left: 2vw;
+    }
+    div.editcell div#output.slide h1 {
+      font-size: 7vw;
+    }
+    div.editcell div#output.slide h2 {
+      font-size: 5vw;
+    }
+    div.editcell div#output.slide h3 {
+      font-size: 4vw;
+    }
+    div.editcell div#output.slide h4 {
+      font-size: 3vw;
+    }
+    div.editcell div#output.slide h5 {
+      font-size: 2vw;
+    }
+    div.editcell div#output.slide h6 {
+      font-size: 1vw;
+    }
+    div.editcell div#output.slide ul,ol {
+     margin-left: 2em;
+    }
+    div.editcell div#output.slide table {
+      margin: 2em auto 0;
+    }
+
+
+    div.editcell div#output span.katex-block {
+      margin: 1em 0;
+      text-align: center;
+    }
 
     div.editcell {
       margin: 1em 0;
@@ -65,6 +111,10 @@
     div.editcell div#output {
       color: #ececec;
       background-color: #424242;
+    }
+    div.editcell div#output hr {
+      border: 1px solid #ececec;
+      width: 95%;
     }
     div.editcell[data-lang="md"] div#output {
       overflow-y: auto;
@@ -171,6 +221,33 @@
     ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
       visibility: visible;
     }
+    .slide-controller {
+      display: none;
+      opacity: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      position: absolute;
+      top: 40vh;
+      width: 20vh;
+      height: 20vh;
+      border-radius: 4vh;
+      z-index: 400;
+    }
+    .slide-controller.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .slide-controller.show:hover {
+      opacity: 1;
+    }
+    .slide-controller#left {
+      left: 0;
+    }
+    .slide-controller#right {
+      right: 0;
+    }
    #drawer {
       display: none;
     }
@@ -197,7 +274,12 @@
           <li onclick="alert('Not implemented');">Add cell below</li>
         </ul>
       </li>
-      <li><label>View<input class="hidden" type="checkbox" name="menuitem"></label></li>
+      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">
+        <label for="menu-view">View</label>
+        <ul class="submenu">
+          <li onclick="startSlideMode(0)">Start slide mode (Ctrl-F5)</li>
+        </ul>
+      </li>
       <li><label>Tools<input class="hidden" type="checkbox" name="menuitem"></label></li>
     </ul>
     <p id="indicator" class="notconnected"></p>
@@ -205,6 +287,8 @@
   <div id="drawer">
 
   </div>
+  <div class="slide-controller" id="left" onclick="prevSlide();"> Back </div>
+  <div class="slide-controller" id="right" onclick="nextSlide();"> Next </div>
   <div id="dm-container">
     {% for data in editcells %}
     <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}"data-next="{{ data.next }}" data-lang="{{ data.lang }}">
@@ -216,6 +300,115 @@
     {% endfor %}
 	</div>
   <script>
+  function getEditCells() {
+    return document.getElementsByClassName('editcell');
+  }
+  function showSlideController() {
+    let controllers = document.querySelectorAll('.slide-controller');
+    for (c of controllers) {
+      c.className = 'slide-controller show';
+    }
+  }
+  function hideSlideController() {
+    let controllers = document.querySelectorAll('.slide-controller');
+    for (c of controllers) {
+      c.className = 'slide-controller';
+    }
+  }
+  function slideKeyListener(e) {
+    if (e.keyCode === 27) {
+      exitSlideMode();
+      e.preventDefault();
+    } else if (e.keyCode === 37) {
+      prevSlide();
+      e.preventDefault();
+    } else if (e.keyCode === 39 || e.keyCode === 32 || e.keyCode === 13) {
+      nextSlide();
+      e.preventDefault();
+    }
+  }
+
+  function startSlideMode(page) {
+    if (!window.slideMode) {
+      window.slideMode = true;
+      window.prevActiveElement = document.activeElement;
+      if (window.prevActiveElement) {
+        window.prevActiveElement.blur();
+      }
+      window.slideNumber = page;
+      showSlideController();
+      let cells = getEditCells();
+      let cell = cells[page];
+      cell.querySelector('#output').className = 'show slide';
+      window.addEventListener('keydown', slideKeyListener);
+    }
+  }
+  function startSlideModeCurrent() {
+    if (!window.slideMode) {
+      let len = getEditCells().length;
+      if (!window.slideNumber || window.slideNumber < 0 || window.slideNumber >= len) {
+        window.slideNumber = 0;
+      }
+      startSlideMode(window.slideNumber);
+    }
+  }
+  function exitSlideMode() {
+    if (window.slideMode) {
+      window.slideMode = false;
+      window.prevActiveElement.focus();
+      window.removeEventListener('keydown', slideKeyListener);
+      hideSlideController();
+      let cells = getEditCells();
+      for (cell of cells) {
+        exitCellOutput(cell);
+      }
+    }
+  }
+  function nextSlide() {
+    if (window.slideMode) {
+      let cell = getEditCells()[window.slideNumber];
+      window.slideNumber += 1;
+      exitCellOutput(cell);
+      if (cell.dataset.next !== '') {
+        let next = window.editcells[cell.dataset.next];
+        let nextOutput = next.outputElement;
+        if (nextOutput.className.includes('show')) {
+          nextOutput.className = 'show slide';
+        } else {
+          nextSlide();
+        }
+      } else {
+        exitSlideMode();
+      }
+    }
+  }
+  function prevSlide() {
+    if (window.slideMode) {
+      let cells = getEditCells();
+      let cell = cells[window.slideNumber];
+      window.slideNumber -= 1;
+      if (window.slideNumber < 0) {
+        window.slideNumber = 0;
+        return;
+      }
+      exitCellOutput(cell);
+      let prevCell = cells[window.slideNumber];
+      let output = prevCell.querySelector('#output');
+      if (output.className.includes('show')) {
+        output.className = 'show slide';
+      } else {
+        prevSlide();
+      }
+    }
+  }
+  function exitCellOutput(cell) {
+    let output = cell.querySelector('#output');
+    if (output.className.includes('show')) {
+      output.className = 'show';
+    } else {
+      output.className = '';
+    }
+  }
   window.onload = () => {
     let connector = document.getElementById('indicator');
     window.ls = new LispSocket(LS_URI, FILE_PATH, connector);
@@ -227,6 +420,9 @@
       } else if (e.keyCode === 82 && e.ctrlKey) {
         e.preventDefault();
         window.ls.recall();
+      } else if (e.keyCode === 116 && e.ctrlKey) {
+        e.preventDefault();
+        startSlideModeCurrent();
       }
     }
     window.editcells = {};

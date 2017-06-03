@@ -109,6 +109,10 @@ class EditCell {
     return this.cell;
   }
 
+  get outputElement() {
+    return this.output;
+  }
+
   get next() {
     return this.cell.dataset.next;
   }
