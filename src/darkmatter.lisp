@@ -136,7 +136,7 @@
     (with-open-file (stream path :direction :input :if-does-not-exist nil)
       `(200 (:content-type ,mime
              :content-length ,(file-length stream))
-      (,path)))))
+        ,(pathname path)))))
 
 (defun serve-index ()
   `(200 (:content-type "text/html")
