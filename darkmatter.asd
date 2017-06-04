@@ -25,7 +25,8 @@
                :cl-markup)
   :components ((:module "src"
                 :components
-                ((:file "darkmatter"))))
+                ((:file "darkmatter" :depends-on ("infix"))
+                 (:file "infix"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

@@ -57,7 +57,7 @@
           (car pkg)
           (let* ((magic (write-to-string (get-universal-time)))
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
-                                    :use `(:cl :darkmatter.plot))))
+                                    :use `(:cl :darkmatter.plot :darkmatter.infix))))
             (eval `(in-package ,(package-name pkg)))
             (defparameter *last-package* nil)
             (export *last-package*)
