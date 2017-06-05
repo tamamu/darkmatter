@@ -4,7 +4,12 @@
 	<meta charset="UTF-8">
   <title>Darkmatter | {{ path }}</title>
 	<script>
-		const LS_URI = "ws://{{ host }}:{{ port }}";
+    const ROOT_DIR = "{{ root }}";
+    const SERVER_HOST = "{{ host }}";
+    const SERVER_PORT = "{{ port }}";
+		const LS_URI = `ws://${SERVER_HOST}:${SERVER_PORT}`;
+    const HTTP_URI = `http://${SERVER_HOST}:${SERVER_PORT}`;
+    const CD_URI = `${HTTP_URI}/${ROOT_DIR}`;
     const FILE_PATH = "{{ path }}";
 	</script>
 	<script src="/static/components/d3/d3.min.js"></script>
@@ -119,6 +124,9 @@
     div.editcell[data-lang="md"] div#output {
       overflow-y: auto;
       max-height: none;
+    }
+    div.editcell[data-lang="md"] div#output.slide {
+      overflow-y: hidden;
     }
     div.editcell table {
       border-color: #ececec;

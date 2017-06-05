@@ -18,7 +18,7 @@ div.editcell div#output {
   background-color: #fff;
   min-height: 5em;
   overflow-y: scroll;
-  max-height: 8em;
+  max-height: 450px;
 }
 
 div.editcell div#output.show {
