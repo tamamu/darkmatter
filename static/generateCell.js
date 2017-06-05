@@ -25,6 +25,9 @@ class EditCell {
   static fromElement(elm) {
     let obj = new EditCell();
     obj.cell = elm;
+    if (obj.cell.dataset.next === undefined) {
+      obj.cell.dataset.next = '';
+    }
     obj.caches = {};
     obj.caches['lisp'] = elm.querySelector('#lisp');
     obj.caches['md'] = elm.querySelector('#md');
@@ -55,6 +58,7 @@ class EditCell {
     obj.cell.id = id;
     obj.cell.className = 'editcell';
     obj.cell.dataset.lang = 'lisp';
+    obj.cell.dataset.next = '';
     let lispCache = document.createElement('div');
     lispCache.id = 'lisp';
     lispCache.className = 'cache';
@@ -150,11 +154,11 @@ class EditCell {
                   EditCell.connect(ls, instance, parent);
                   ec.cell.dataset.next = instance.id;
                   instance.editor.focus();
-                  parent.scrollTop = instance.offsetTop - 82;
+                  parent.scrollTop = instance.offsetTop - 82 - 200;
                 } else {
                   let cell = window.editcells[ec.next];
                   cell.editor.focus();
-                  parent.scrollTop = cell.element.offsetTop - 82;
+                  parent.scrollTop = cell.element.offsetTop - 82 - 200;
                 }
               }
             }
