@@ -41,11 +41,15 @@
 (defpackage darkmatter.plot
   (:use :cl)
   (:export scatter
-           make-scatter))
+           make-scatter
+           line
+           make-line))
 (in-package :darkmatter.plot)
 (defstruct scatter
   (xlabel "x" :type string)
   (ylabel "y" :type string)
+  (data #() :type array))
+(defstruct line
   (data #() :type array))
 (in-package darkmatter)
 
@@ -109,8 +113,8 @@
                               (get-output-stream-string *standard-output*)))))))))
 
 (defun save-file (fname data)
+  (format t "save~%")
   (let ((res (list)))
-    (print data)
     (loop for d in data
           for c = `((:id . ,(jsown:val d "id"))
                     (:next . ,(jsown:val d "next"))
@@ -158,6 +162,7 @@
   (make-temporary-package path)
   `(200 (:content-type "text/html")
     (,(render-template* +base.html+ nil
+                        :root (directory-namestring path)
                         :host (getf env :server-name)
                         :port (getf env :server-port)
                         :path path))))
@@ -170,6 +175,7 @@
         `(200 (:content-type "text/html")
           (,(render-template* +base.html+ nil
                               :editcells (cdr editcells)
+                              :root (directory-namestring path)
                               :host (getf env :server-name)
                               :port (getf env :server-port)
                               :path path)))
@@ -205,6 +211,10 @@
                         ("recall" (recall-package (jsown:val json "file")))
                         (t "{}"))))
             (send ws res))))
+    (on :close ws
+        (lambda (code reason)
+          (format t "Closed because '~A' (Code=~A)~%" reason code)
+          (start-connection ws)))
     (lambda (responder)
       (declare (ignore responder))
       (start-connection ws))))

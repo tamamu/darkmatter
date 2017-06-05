@@ -28,6 +28,23 @@ class LispSocket {
       }
       return originalCodeSpan(text);
     };
+    let originalImage = this.renderer.image.bind(this.renderer);
+    let originalLink = this.renderer.link.bind(this.renderer);
+    let get_uri = (href) => {
+      if (href.startsWith('/')) {
+        return `${HTTP_URI}/${href}`;
+      } else if (href.startsWith('http://')) {
+        return href;
+      } else {
+        return `${CD_URI}${href}`;
+      }
+    }
+    this.renderer.image = (href, title, text) => {
+      return originalImage(get_uri(href), title, text);
+    }
+    this.renderer.link = (href, title, text) => {
+      return originalLink(get_uri(href), title, text);
+    }
 		this.socket.onopen = (e) => {
 			console.log('Connected.');
       this.indicator.className = 'connected';
@@ -66,6 +83,47 @@ class LispSocket {
     } else {
       return null;
     }
+  }
+
+  plotLine(dict) {
+    let vec = arrayToList(dict[":DATA"]);
+    let data = [];
+    for (let i=0; i < vec.length; i++) {
+      data.push([i, vec[i]]);
+    }
+    let container = document.createElement('div');
+    let x = d3.scaleLinear()
+              .range([0, 300]);
+    let y = d3.scaleLinear()
+              .range([300, 0]);
+    x.domain(d3.extent(data, d => d[0])).nice();
+    y.domain(d3.extent(data, d => d[1])).nice();
+    let line = d3.line()
+                 .x(d => x(d[0]))
+                 .y(d => y(d[1]));
+    let svg = d3.select(container)
+                .append('svg')
+                .attr('width', '400')
+                .attr('height', '400')
+                .append('g')
+                  .attr('transform', 'translate(40, 40)');
+    svg.append('g')
+         .call(d3.axisLeft(y))
+       .append('text')
+         .attr('fill', 'white')
+         .attr('y', 6)
+         .attr('dy', '0.71em')
+         .attr('text-anchor', 'end')
+         .text('Y');
+    svg.append('path')
+       .datum(data)
+       .attr('class', 'line')
+       .attr('fill', 'none')
+       .attr('stroke', 'white')
+       .attr('stroke-width', 1.5)
+       .attr('d', line);
+
+    return container.outerHTML;
   }
 
 	plotScatter(dict) {
@@ -138,6 +196,10 @@ class LispSocket {
 			case "DARKMATTER.PLOT:SCATTER":
 				return this.plotScatter(dict);
 				break;
+      case "LINE":
+      case "DARKMATTER.PLOT:LINE":
+        return this.plotLine(dict);
+        break;
 			default:
 				return structName;
 		}
