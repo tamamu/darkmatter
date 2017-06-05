@@ -87,12 +87,15 @@ class EditCell {
     switch (this.cell.dataset.lang) {
       case 'lisp':
         this.cell.dataset.lang = 'md';
+        this.editor.getSession().setMode('ace/mode/markdown');
         break;
       case 'md':
         this.cell.dataset.lang = 'lisp';
+        this.editor.getSession().setMode('ace/mode/lisp');
         break;
       default:
         this.cell.dataset.lang = 'lisp';
+        this.editor.getSession().setMode('ace/mode/lisp');
         break;
     }
   }
