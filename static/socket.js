@@ -110,7 +110,6 @@ class LispSocket {
     svg.append('g')
          .call(d3.axisLeft(y))
        .append('text')
-         .attr('fill', 'white')
          .attr('y', 6)
          .attr('dy', '0.71em')
          .attr('text-anchor', 'end')
