@@ -42,9 +42,7 @@
       margin: 0.3em 0;
     }
 		#dm-container {
-			display: flex;
-			flex-direction: column;
-      align-items: center;
+      flex: 1;
       background-color: #455A64;
       overflow-y: scroll;
     }
@@ -59,13 +57,13 @@
       margin: 0;
       z-index: 200;
       overflow: hidden;
-      font-size: 3vw;
+      font-size: 2vw;
     }
     div.editcell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
       margin-left: 2vw;
     }
     div.editcell div#output.slide h1 {
-      font-size: 7vw;
+      font-size: 6vw;
     }
     div.editcell div#output.slide h2 {
       font-size: 5vw;
@@ -96,12 +94,12 @@
     }
 
     div.editcell {
-      margin: 1em 0;
       color: black;
     }
     div.editcell:before {
       font-size: 10px;
       background-color: #757575;
+      display: flex;
     }
     div.editcell[data-lang="lisp"]:before {
       color: white;

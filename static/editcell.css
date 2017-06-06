@@ -1,7 +1,6 @@
 div.editcell {
-  display: flex;
+  margin: 1em auto;
   width: 80vw;
-  flex-direction: column;
   box-shadow: 10px 10px rgba(0,0,0,0.2);
 }
 
