@@ -128,6 +128,18 @@ class EditCell {
     return this.cell.id;
   }
 
+  eval(callback = null) {
+    let contents = this.editor.getValue();
+    switch (this.lang) {
+      case 'lisp':
+        ls.eval(contents, this.outputElement, callback, this);
+        break;
+      case 'md':
+        ls.markdown(contents, this.outputElement, callback, this);
+        break;
+    }
+  }
+
   static connect(ls, ec, parent) {
 			ec.container.onkeydown = (e) => {
 				if (e.keyCode === 13) {
@@ -140,6 +152,8 @@ class EditCell {
   							document.getElementById(ec.next).editor.focus();
   						}
   					} else {
+              ec.eval();
+              /*
               switch (ec.cell.dataset.lang) {
                 case 'lisp':
                   console.log('lisp evaluated');
@@ -150,6 +164,7 @@ class EditCell {
                   ls.markdown(contents, ec.output);
                   break;
               }
+              */
               if (e.shiftKey) {
                 if (ec.next === undefined || ec.next === '') {
                   let instance = EditCell.createElement(Date.now().toString());

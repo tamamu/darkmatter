@@ -258,12 +258,13 @@ class LispSocket {
 		return res;
 	}
 
-  markdown(src, output) {
+  markdown(src, output, callback = null, arg = null) {
     let result = marked(src, {breaks: true, renderer: this.renderer});
     output.innerHTML = result;
+    if (callback) callback(arg);
   }
 
-	eval(src, output) {
+	eval(src, output, callback = null, arg = null) {
 		if (this.state) {
 			this.socket.onmessage = (e) => {
 				let json = JSON.parse(e.data);
@@ -276,6 +277,7 @@ class LispSocket {
 				let result = this.parse(json['output']);
 				output.innerHTML = `<div id="result"> ${returnVal}</div>`;
 				output.innerHTML += result;
+        if (callback) callback(arg);
 			}
       let sender = JSON.stringify({
         "message": "eval",

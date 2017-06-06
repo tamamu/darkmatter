@@ -297,7 +297,12 @@
           <li onclick="startSlideMode(0)">Start slide mode (Ctrl-F5)</li>
         </ul>
       </li>
-      <li><label>Tools<input class="hidden" type="checkbox" name="menuitem"></label></li>
+      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-tools">
+        <label for="menu-tools">Tools</label>
+        <ul class="submenu">
+          <li onclick="evalAllCells();">Eval all cells (Ctrl-F9)</li>
+        </ul>
+      </li>
     </ul>
     <p id="indicator" class="notconnected"></p>
   </nav>
@@ -426,6 +431,19 @@
       output.className = '';
     }
   }
+  function evalAllCells() {
+    let cells = document.getElementsByClassName('editcell');
+    if (cells.length <= 0) return;
+
+    let first = window.editcells[cells[0].id];
+    console.log(first);
+    first.eval(evalNextCell);
+  }
+  function evalNextCell(cell) {
+    if (cell.next !== '' && cell.editor.getValue().trim() !== '') {
+      window.editcells[cell.next].eval(evalNextCell);
+    }
+  }
   window.onload = () => {
     let connector = document.getElementById('indicator');
     window.ls = new LispSocket(LS_URI, FILE_PATH, connector);
@@ -440,6 +458,9 @@
       } else if (e.keyCode === 116 && e.ctrlKey) {
         e.preventDefault();
         startSlideModeCurrent();
+      } else if (e.keyCode === 120 && e.ctrlKey) {
+        e.preventDefault();
+        evalAllCells();
       }
     }
     window.editcells = {};
