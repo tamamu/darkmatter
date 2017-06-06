@@ -211,6 +211,12 @@
                         ("recall" (recall-package (jsown:val json "file")))
                         (t "{}"))))
             (send ws res))))
+    (on :open ws
+        (lambda ()
+          (format t "Connected.~%")))
+    (on :error ws
+        (lambda (error)
+          (format t "Got an error:~S~%" error)))
     (on :close ws
         (lambda (code reason)
           (format t "Closed because '~A' (Code=~A)~%" reason code)
