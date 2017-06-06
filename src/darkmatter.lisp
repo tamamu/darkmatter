@@ -118,6 +118,7 @@
     (loop for d in data
           for c = `((:id . ,(jsown:val d "id"))
                     (:next . ,(jsown:val d "next"))
+                    (:before . ,(jsown:val d "before"))
                     (:count . ,(jsown:val d "count"))
                     (:lang . ,(jsown:val d "lang"))
                     (:lisp . ,(jsown:val d "lisp"))
