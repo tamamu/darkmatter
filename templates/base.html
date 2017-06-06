@@ -285,14 +285,15 @@
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-edit">
         <label for="menu-edit">Edit</label>
         <ul class="submenu">
-          <li onclick="alert('Not implemented');">Change cell language (Ctrl-i)</li>
-          <li onclick="alert('Not implemented');">Add cell below</li>
+          <li onclick="alert('Use keyborad shortcut Ctrl-i');">Change cell language (Ctrl-i)</li>
+          <li onclick="addCellToCurrentAbove();">Add cell above</li>
+          <li onclick="addCellToCurrentBelow();">Add cell below</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">
         <label for="menu-view">View</label>
         <ul class="submenu">
-          <li onclick="startSlideMode(0)">Start slide mode (Ctrl-F5)</li>
+          <li onclick="startSlideMode()">Start slide mode (Ctrl-F5)</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-tools">
@@ -311,7 +312,7 @@
   <div class="slide-controller" id="right" onclick="nextSlide();"> Next </div>
   <div id="dm-container">
     {% for data in editcells %}
-    <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}"data-next="{{ data.next }}" data-lang="{{ data.lang }}">
+    <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}" data-next="{{ data.next }}" data-before="{{ data.before }}" data-lang="{{ data.lang }}">
       <div id="lisp" class="cache" data-content="{{ data.lisp }}"></div>
       <div id="md" class="cache" data-content="{{ data.md }}"></div>
       <div id="editor"></div>
@@ -322,6 +323,27 @@
   <script>
   function getEditCells() {
     return document.getElementsByClassName('editcell');
+  }
+  function getCurrentCellId() {
+    if (window.currentCell) {
+      return window.currentCell;
+    } else {
+      return null;
+    }
+  }
+  function addCellToCurrentAbove() {
+    let container = document.getElementById('dm-container');
+    let current = getCurrentCellId();
+    if (current) {
+      window.editcells[current].addCellToAbove(window.ls, container);
+    }
+  }
+  function addCellToCurrentBelow() {
+    let container = document.getElementById('dm-container');
+    let current = getCurrentCellId();
+    if (current) {
+      window.editcells[current].addCellToBelow(window.ls, container);
+    }
   }
   function showSlideController() {
     let controllers = document.querySelectorAll('.slide-controller');
@@ -348,28 +370,26 @@
     }
   }
 
-  function startSlideMode(page) {
+  function startSlideMode() {
     if (!window.slideMode) {
       window.slideMode = true;
+      let editcells = getEditCells();
+      window.slideId = getCurrentCellId();
+      if (window.slideId === null || window.slideId === '') {
+        if (editcells.length > 0) {
+          window.slideId = editcells[0].id;
+        } else {
+          return;
+        }
+      }
       window.prevActiveElement = document.activeElement;
       if (window.prevActiveElement) {
         window.prevActiveElement.blur();
       }
-      window.slideNumber = page;
       showSlideController();
-      let cells = getEditCells();
-      let cell = cells[page];
+      let cell = editcells[window.slideId];
       cell.querySelector('#output').className = 'show slide';
       window.addEventListener('keydown', slideKeyListener);
-    }
-  }
-  function startSlideModeCurrent() {
-    if (!window.slideMode) {
-      let len = getEditCells().length;
-      if (!window.slideNumber || window.slideNumber < 0 || window.slideNumber >= len) {
-        window.slideNumber = 0;
-      }
-      startSlideMode(window.slideNumber);
     }
   }
   function exitSlideMode() {
@@ -386,11 +406,11 @@
   }
   function nextSlide() {
     if (window.slideMode) {
-      let cell = getEditCells()[window.slideNumber];
-      window.slideNumber += 1;
+      let cell = getEditCells()[window.slideId];
+      window.slideId = cell.dataset.next;
       exitCellOutput(cell);
-      if (cell.dataset.next !== '') {
-        let next = window.editcells[cell.dataset.next];
+      if (window.slideId !== null && window.slideId !== '') {
+        let next = window.editcells[window.slideId];
         let nextOutput = next.outputElement;
         if (nextOutput.className.includes('show')) {
           nextOutput.className = 'show slide';
@@ -405,14 +425,14 @@
   function prevSlide() {
     if (window.slideMode) {
       let cells = getEditCells();
-      let cell = cells[window.slideNumber];
-      window.slideNumber -= 1;
-      if (window.slideNumber < 0) {
-        window.slideNumber = 0;
+      let cell = cells[window.slideId];
+      window.slideId = cell.dataset.before;
+      if (window.slideId === null || window.slideId === '') {
+        window.slideId = cell.id;
         return;
       }
       exitCellOutput(cell);
-      let prevCell = cells[window.slideNumber];
+      let prevCell = cells[window.slideId];
       let output = prevCell.querySelector('#output');
       if (output.className.includes('show')) {
         output.className = 'show slide';
@@ -455,7 +475,7 @@
         window.ls.recall();
       } else if (e.keyCode === 116 && e.ctrlKey) {
         e.preventDefault();
-        startSlideModeCurrent();
+        startSlideMode();
       } else if (e.keyCode === 120 && e.ctrlKey) {
         e.preventDefault();
         evalAllCells();
@@ -464,10 +484,19 @@
     window.editcells = {};
     let cells = document.getElementsByClassName('editcell');
     let container = document.getElementById('dm-container');
-    for (cell of cells) {
+    let before = null;
+    for (let i = 0; i < cells.length; i++) {
+      let cell = cells[i];
       let instance = EditCell.fromElement(cell);
+      if (before && instance.before === '') {
+        instance.element.dataset.before = before.id;
+      }
+      if (instance.next === '' && i < cells.length-1) {
+        instance.element.dataset.next = cells[i+1].dataset.id;
+      }
       window.editcells[cell.id] = instance;
       EditCell.connect(window.ls, instance, container);
+      before = instance;
     }
     if (cells.length > 0) {
       let lastcell = cells[cells.length-1];

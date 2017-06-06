@@ -28,6 +28,9 @@ class EditCell {
     if (obj.cell.dataset.next === undefined) {
       obj.cell.dataset.next = '';
     }
+    if (obj.cell.dataset.before == undefined) {
+      obj.cell.dataset.before = '';
+    }
     obj.caches = {};
     obj.caches['lisp'] = elm.querySelector('#lisp');
     obj.caches['md'] = elm.querySelector('#md');
@@ -44,6 +47,7 @@ class EditCell {
       elm.appendChild(obj.output);
     }
     obj.editor = EditCell.createEditor(obj.container);
+    obj.editor.addEventListener('focus', (e) => {window.currentCell = obj.cell.id;});
     let lang = elm.dataset.lang;
     if (lang) {
       obj.editor.getSession().setValue(obj.caches[lang].dataset.content);
@@ -52,13 +56,14 @@ class EditCell {
     return obj;
   }
 
-  static createElement(id) {
+  static createElement(id, before = '') {
     let obj = new EditCell();
     obj.cell = document.createElement('div');
     obj.cell.id = id;
     obj.cell.className = 'editcell';
     obj.cell.dataset.lang = 'lisp';
     obj.cell.dataset.next = '';
+    obj.cell.dataset.before = before;
     let lispCache = document.createElement('div');
     lispCache.id = 'lisp';
     lispCache.className = 'cache';
@@ -72,6 +77,7 @@ class EditCell {
     obj.container = document.createElement('div');
     obj.container.id = 'editor';
     obj.editor = EditCell.createEditor(obj.container);
+    obj.editor.addEventListener('focus', (e) => {window.currentCell = obj.cell.id;});
     obj.output = document.createElement('div');
     obj.output.id = 'output';
 
@@ -120,6 +126,10 @@ class EditCell {
     return this.output;
   }
 
+  get before() {
+    return this.cell.dataset.before;
+  }
+
   get next() {
     return this.cell.dataset.next;
   }
@@ -140,7 +150,38 @@ class EditCell {
     }
   }
 
+  addCellToAbove(ls, parent) {
+    let instance = EditCell.createElement(Date.now().toString(), this.before);
+    instance.element.dataset.next = this.id;
+    let before = null;
+    if (this.before !== '') {
+      before = document.getElementById(this.before);
+      before.dataset.next = instance.id;
+    }
+    this.element.dataset.before = instance.id;
+    parent.insertBefore(instance.element, this.element);
+    instance.editor.focus();
+    EditCell.connect(ls, instance, parent);
+  }
+
+  addCellToBelow(ls, parent) {
+    let instance = EditCell.createElement(Date.now().toString(), this.id);
+    let next = null;
+    if (this.next !== '') {
+      instance.element.dataset.next = this.next;
+      next = document.getElementById(this.next);
+      next.dataset.before = instance.id;
+    }
+    this.element.dataset.next = instance.id;
+    parent.insertBefore(instance.element, this.element.nextSibling);
+    instance.editor.focus();
+    EditCell.connect(ls, instance, parent);
+  }
+
   static connect(ls, ec, parent) {
+    ec.editor.addEventListener('change', (e) => {
+      ls.modified = true;
+    });
 			ec.container.onkeydown = (e) => {
 				if (e.keyCode === 13) {
           if (e.ctrlKey || e.shiftKey) {
@@ -153,21 +194,9 @@ class EditCell {
   						}
   					} else {
               ec.eval();
-              /*
-              switch (ec.cell.dataset.lang) {
-                case 'lisp':
-                  console.log('lisp evaluated');
-                  ls.eval(contents, ec.output);
-                  break;
-                case 'md':
-                  console.log('katex evaluated');
-                  ls.markdown(contents, ec.output);
-                  break;
-              }
-              */
               if (e.shiftKey) {
                 if (ec.next === undefined || ec.next === '') {
-                  let instance = EditCell.createElement(Date.now().toString());
+                  let instance = EditCell.createElement(Date.now().toString(), ec.before);
                   parent.appendChild(instance.element);
                   EditCell.connect(ls, instance, parent);
                   ec.cell.dataset.next = instance.id;
@@ -189,9 +218,6 @@ class EditCell {
           ec.changeLang();
           ec.setValue(ec.caches[ec.lang].dataset.content);
           e.preventDefault();
-        }
-        if (!(e.ctrlKey && e.keyCode === 83)) {
-          ls.modified = true;
         }
 			};
 		}
