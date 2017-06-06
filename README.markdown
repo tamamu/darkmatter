@@ -6,8 +6,20 @@
 
 * <https://github.com/roswell/roswell>
 * Your favorite web browser (Google Chrome, Firefox...)
+* libev
 
 ## Installation
+
+```
+# Install requirements
+
+# for macOS
+$ brew install libev roswell
+
+
+# for Arch Linux
+$ yaourt install libev roswell
+```
 
 ```
 $ ros install tamamu/darkmatter
