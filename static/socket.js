@@ -1,8 +1,10 @@
 
 class LispSocket {
 	constructor(uri, filepath, indicator) {
-		this.socket = new WebSocket(uri);
+    this.uri = uri;
+		this.socket = null;
 		this.state = false;
+    this.attempts = 1;
     this.file = filepath;
     this.modified = false;
     window.addEventListener('beforeunload', (e) => {
@@ -45,21 +47,46 @@ class LispSocket {
     this.renderer.link = (href, title, text) => {
       return originalLink(get_uri(href), title, text);
     }
-		this.socket.onopen = (e) => {
-			console.log('Connected.');
+    this.connect();
+  }
+
+  static generateInterval(k) {
+    let maxInterval = (Math.pow(2, k) - 1) * 1000;
+
+    if (maxInterval > 30 * 1000) {
+      maxInterval = 30*1000;
+    }
+
+    return Math.random() * maxInterval;
+  }
+
+  connect(callback = null) {
+    console.log('Connect...');
+    let connection = new WebSocket(this.uri);
+    connection.onopen = () => {
+      this.socket = connection;
       this.indicator.className = 'connected';
-			this.state = true;
-		};
-		this.socket.onclose = (e) => {
-			console.log('Closed.');
+      this.state = true;
+      if (callback) {
+        callback();
+      }
+    }
+    connection.onclose = () => {
       this.indicator.className = 'notconnected';
-			this.state = false;
-		}
-		this.socket.onerror = (e) => {
-			console.log('Error');
+      this.state = false;
+      this.attempts += 1;
+      let time = LispSocket.generateInterval(this.attempts);
+      setTimeout(() => {
+        this.attempts += 1;
+        this.connect();
+      }, time);
+    }
+    connection.onerror = (e) => {
+      this.indicator.className = 'notconnected';
+      this.state = false;
       console.log(e);
-		}
-	}
+    }
+  }
 
   renderLatex(expr) {
     console.log('render latex');
