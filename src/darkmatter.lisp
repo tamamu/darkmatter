@@ -198,7 +198,7 @@
 
 (defun bind-message (env)
   "Bind websocket messages"
-  (let ((ws (make-server env)))
+  (let ((ws (make-server env :max-length #xfffffff)))
     (on :message ws
         (lambda (message)
           (let* ((json (jsown:parse message))
@@ -226,17 +226,39 @@
       (declare (ignore responder))
       (start-connection ws))))
 
-(defparameter *eval-server*
-  (lambda (env)
-    (let ((uri (getf env :request-uri)))
-      (if (string= "/" uri)
+(defun handle-get (env)
+  (let ((uri (getf env :request-uri)))
+    (if (string= "/" uri)
         (serve-index)
         (let ((path (subseq uri 1)))
           (if-let (data (read-global-file env path))
                   data
                   (if (string= "LISP" (string-upcase (pathname-type path)))
-                    (get-editable-file path env)
-                    (notfound env)))))))
+                      (get-editable-file path env)
+                      (notfound env)))))))
+
+(defun handle-put (env)
+  (let ((input (flexi-streams:make-flexi-stream
+                 (getf env :raw-body)
+                 :external-format (flexi-streams:make-external-format :utf-8)))
+        (recv (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+    (with-output-to-string (s recv)
+      (loop for line = (read-line input nil nil) while line
+            do (format s "~A~%" line)))
+    (let* ((json (jsown:parse recv))
+           (message (jsown:val json "message"))
+           (res (string-case
+                  (message)
+                  ("save" (save-file (jsown:val json "file")
+                                     (jsown:val json "data")))
+                  (t "{}"))))
+      `(201 (:content-type "application/json") (,res)))))
+
+(defparameter *eval-server*
+  (lambda (env)
+    (if (eq :GET (getf env :request-method))
+      (handle-get env)
+      (handle-put env)))
   "File server")
 
 (setf *eval-server*
