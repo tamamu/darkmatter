@@ -305,6 +305,9 @@ class LispSocket {
 				let result = this.parse(json['output']);
 				output.innerHTML = `<div id="result"> ${returnVal}</div>`;
 				output.innerHTML += result;
+        output.addEventListener('DOMContentLoaded', () => {
+          console.log('loaded');
+        });
         if (callback) callback(arg);
 			}
       let sender = JSON.stringify({
@@ -337,19 +340,20 @@ class LispSocket {
         d[cell.dataset.lang] = ec.value;
         data.push(d);
       }
-      this.socket.onmessage = (e) => {
-        let json = JSON.parse(e.data);
+      let onmessage = (message) => {
+        let json = JSON.parse(message);
         console.log(`Result:${json['return']}`);
         let show = document.getElementById('alert');
         show.innerText = `Saved: ${json['return']} (${(new Date()).toString()})`;
         window.ls.modified = false;
-      }
+      };
       let sender = JSON.stringify({
         "message": "save",
         "file": this.file,
         "data": data
       });
-      this.socket.send(sender);
+      console.log(sender.length);
+      requestPut(window.HTTP_URI, sender, onmessage);
     } else {
       console.log("Can't save the code.");
     }
@@ -373,3 +377,25 @@ class LispSocket {
   }
 }
 
+function requestPut(uri, data, callback = null) {
+  let xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function (){
+    switch(xhr.readyState){
+    case 4: //xhr failed
+      if(xhr.status == 0){
+        alert("Error: send save request failed.");
+      }else{
+        if((200 <= xhr.status && xhr.status < 300) || (xhr.status == 304)){
+          // success
+          if (callback) callback(xhr.responseText);
+        }else{
+          //failed
+          alert("Error: " + xhr.status);
+        }
+      }
+      break;
+    }
+  };
+  xhr.open('PUT', uri);
+  xhr.send(data);
+}
