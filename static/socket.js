@@ -66,6 +66,7 @@ class LispSocket {
     connection.onopen = () => {
       this.socket = connection;
       this.indicator.className = 'connected';
+      this.attempts = 1;
       this.state = true;
       if (callback) {
         callback();
