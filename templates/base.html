@@ -286,8 +286,10 @@
         <label for="menu-edit">Edit</label>
         <ul class="submenu">
           <li onclick="alert('Use keyborad shortcut Ctrl-i');">Change cell language (Ctrl-i)</li>
-          <li onclick="addCellToCurrentAbove();">Add cell above</li>
-          <li onclick="addCellToCurrentBelow();">Add cell below</li>
+          <li onclick="focusPrevCell();">Select previous cell (Ctrl-↑)</li>
+          <li onclick="focusNextCell();">Select next cell (Ctrl-↓)</li>
+          <li onclick="addCellToCurrentAbove();">Add cell above (Ctrl-p)</li>
+          <li onclick="addCellToCurrentBelow();">Add cell below (Ctrl-b)</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">

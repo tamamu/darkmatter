@@ -1,4 +1,27 @@
 
+function focusNextCell() {
+  let current;
+  if (current = getCurrentCellId()) {
+    let cell = getEditCells()[current];
+    if (cell.dataset.next) {
+      let next = window.editcells[cell.dataset.next];
+      next.editor.focus();
+      document.getElementById('dm-container').scrollTop = next.element.offsetTop - 82;
+    }
+  }
+}
+function focusPrevCell() {
+  let current;
+  if (current = getCurrentCellId()) {
+    let cell = getEditCells()[current];
+    if (cell.dataset.before) {
+      let prev = window.editcells[cell.dataset.before];
+      prev.editor.focus();
+      document.getElementById('dm-container').scrollTop = prev.element.offsetTop - 82;
+    }
+  }
+}
+
 class EditCell {
 
   constructor() {
@@ -182,7 +205,7 @@ class EditCell {
     ec.editor.addEventListener('change', (e) => {
       ls.modified = true;
     });
-			ec.container.onkeydown = (e) => {
+			ec.container.addEventListener('keydown', (e) => {
 				if (e.keyCode === 13) {
           if (e.ctrlKey || e.shiftKey) {
             ec.output.className = "show";
@@ -218,8 +241,20 @@ class EditCell {
           ec.changeLang();
           ec.setValue(ec.caches[ec.lang].dataset.content);
           e.preventDefault();
+        } else if (e.keyCode === 38 && e.ctrlKey) {
+          e.preventDefault();
+          focusPrevCell();
+        } else if (e.keyCode === 40 && e.ctrlKey) {
+          e.preventDefault();
+          focusNextCell();
+        } else if (e.keyCode === 80 && e.ctrlKey) {
+          e.preventDefault();
+          addCellToCurrentAbove();
+        } else if (e.keyCode === 66 && e.ctrlKey) {
+          e.preventDefault();
+          addCellToCurrentBelow();
         }
-			};
+			}, true);
 		}
 }
 
