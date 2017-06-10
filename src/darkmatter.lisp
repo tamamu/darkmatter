@@ -198,7 +198,7 @@
 
 (defun bind-message (env)
   "Bind websocket messages"
-  (let ((ws (make-server env :max-length #xfffffff)))
+  (let ((ws (make-server env)))
     (on :message ws
         (lambda (message)
           (let* ((json (jsown:parse message))
