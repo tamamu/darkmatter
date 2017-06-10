@@ -4,6 +4,7 @@
   (:export :->
            :$
            :!
+           :@
            :enable-suite-syntax
            :disable-suite-syntax
            :with-suite))
