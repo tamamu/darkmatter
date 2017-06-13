@@ -157,11 +157,11 @@ class LispSocket {
 		let vec = arrayToList(dict[":DATA"]);
 		let container = document.createElement('div');
 		let x = d3.scaleLinear()
+              .domain([0, d3.max(vec, d => d[0])])
 							.range([0, 300]);
-		x.domain(d3.extent(d => d[0]));
 		let y = d3.scaleLinear()
+              .domain([0, d3.max(vec, d => d[1])])
 							.range([300, 0]);
-		y.domain(d3.extent(d => d[1]));
 
 		let svg = d3.select(container)
 								.append('svg')
@@ -184,8 +184,8 @@ class LispSocket {
 					} else {
 						return 'black';
 					}})
-				.attr('cx', d => d[0])
-				.attr('cy', d => 300-d[1])
+				.attr('cx', d => x(d[0]))
+				.attr('cy', d => y(d[1]))
 				.attr('r', 5);
 
 		svg.append('g')
