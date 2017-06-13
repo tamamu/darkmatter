@@ -86,9 +86,11 @@
     (if-let (last-package (cdr pkg))
       (eval `(in-package ,last-package))
       (eval `(in-package ,(package-name (car pkg)))))
-  (let* ((*standard-output* (make-string-output-stream))
+  (let* ((standard-output *standard-output*)
+         (*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
          (eo "")
+         (so "")
          (sexp nil)
          (return-value nil)
          (pos 0))
@@ -100,17 +102,18 @@
       (END-OF-FILE (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
     (setf eo (get-output-stream-string *error-output*))
+    (setf so (get-output-stream-string *standard-output*))
 ;    (setf eo "")
     (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
+    (format standard-output "Result:~A~%~A~%" return-value so)
     (jsown:to-json
       `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
              ("output" . ,(format nil "~A~A"
                             (if (string= "" eo)
                                 ""
                                 (markup (:pre eo)))
-                            (string-left-trim '(#\Space #\Newline)
-                              (get-output-stream-string *standard-output*)))))))))
+                            (string-left-trim '(#\Space #\Newline) so))))))))
 
 (defun save-file (fname data)
   (format t "save~%")
