@@ -44,6 +44,25 @@ function swapPrevCell() {
   }
 }
 
+function removeCurrentCell() {
+  let current;
+  if (current = getCurrentCellId()) {
+    let cells = getEditCells();
+    let cell = cells[current];
+    let prev = cell.dataset.before;
+    let next = cell.dataset.next;
+    if (next && cells[next]) {
+      cells[next].dataset.before = prev;
+      window.editcells[next].editor.focus();
+    }
+    if (prev && cells[prev]) {
+      cells[prev].dataset.next = next;
+      window.editcells[prev].editor.focus();
+    }
+    let parent = cell.parentElement;
+    parent.removeChild(cell);
+  }
+}
 
 function focusNextCell() {
   let current;
@@ -309,6 +328,9 @@ class EditCell {
         } else if (e.keyCode === 66 && e.ctrlKey) {
           e.preventDefault();
           addCellToCurrentBelow();
+        } else if (e.keyCode === 46 && e.ctrlKey) {
+          e.preventDefault();
+          removeCurrentCell();
         }
 			}, true);
 		}

@@ -292,6 +292,7 @@
           <li onclick="swapNextCell();">Swap to next cell (Shift-Ctrl-↓)</li>
           <li onclick="addCellToCurrentAbove();">Add cell above (Ctrl-p)</li>
           <li onclick="addCellToCurrentBelow();">Add cell below (Ctrl-b)</li>
+          <li onclick="removeCurrentCell();">Remove cell (Ctrl-Del)</li>
         </ul>
       </li>
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">
@@ -509,6 +510,7 @@
        || lastcell.querySelector('#output').innerHTML !== '') {
         let instance = EditCell.createElement(Date.now().toString());
         cells[cells.length-1].dataset.next = instance.id;
+        instance.element.dataset.before = cells[cells.length-1].id;
         container.appendChild(instance.element);
         EditCell.connect(window.ls, instance, container);
       }
