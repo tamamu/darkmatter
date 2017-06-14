@@ -1,4 +1,50 @@
 
+function swapCell(cell1, cell2) {
+  let next2 = cell2.dataset.next;
+  let prev1 = cell1.dataset.before;
+  cell1.dataset.before = cell2.id;
+  cell2.dataset.next = cell1.id;
+  cell1.dataset.next = next2;
+  cell2.dataset.before = prev1;
+  let parent = cell1.parentElement;
+  parent.removeChild(cell2);
+  parent.insertBefore(cell2, cell1);
+}
+
+function adjustScroll(cell) {
+  document.getElementById('dm-container').scrollTop =
+    cell.offsetTop - Math.min(window.innerHeight/2 + cell.clientHeight, 200);
+}
+
+function swapNextCell() {
+  let current;
+  if (current = getCurrentCellId()) {
+    let cells = getEditCells();
+    let cell = cells[current];
+    if (cell.dataset.next !== '') {
+      let next = cells[cell.dataset.next];
+      swapCell(cell, next);
+      window.editcells[cell.id].editor.focus();
+      adjustScroll(cell);
+    }
+  }
+}
+
+function swapPrevCell() {
+  let current;
+  if (current = getCurrentCellId()) {
+    let cells = getEditCells();
+    let cell = cells[current];
+    if (cell.dataset.before !== '') {
+      let prev = cells[cell.dataset.before];
+      swapCell(prev, cell);
+      window.editcells[cell.id].editor.focus();
+      adjustScroll(cell);
+    }
+  }
+}
+
+
 function focusNextCell() {
   let current;
   if (current = getCurrentCellId()) {
@@ -6,7 +52,7 @@ function focusNextCell() {
     if (cell.dataset.next) {
       let next = window.editcells[cell.dataset.next];
       next.editor.focus();
-      document.getElementById('dm-container').scrollTop = next.element.offsetTop - 82;
+      adjustScroll(next.element);
     }
   }
 }
@@ -17,7 +63,7 @@ function focusPrevCell() {
     if (cell.dataset.before) {
       let prev = window.editcells[cell.dataset.before];
       prev.editor.focus();
-      document.getElementById('dm-container').scrollTop = prev.element.offsetTop - 82;
+      adjustScroll(prev.element);
     }
   }
 }
@@ -243,10 +289,20 @@ class EditCell {
           e.preventDefault();
         } else if (e.keyCode === 38 && e.ctrlKey) {
           e.preventDefault();
-          focusPrevCell();
+          if (e.shiftKey) {
+            swapPrevCell();
+            ls.modified = true;
+          } else {
+            focusPrevCell();
+          }
         } else if (e.keyCode === 40 && e.ctrlKey) {
           e.preventDefault();
-          focusNextCell();
+          if (e.shiftKey) {
+            swapNextCell();
+            ls.modified = true;
+          } else {
+           focusNextCell();
+          }
         } else if (e.keyCode === 80 && e.ctrlKey) {
           e.preventDefault();
           addCellToCurrentAbove();
