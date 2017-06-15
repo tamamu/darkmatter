@@ -16,263 +16,22 @@
   <script src="/static/components/ace/ace.js"></script>
   <script src="/static/components/katex/katex.min.js"></script>
   <script src="/static/components/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="/static/components/katex/katex.min.css">
 	<script src="/static/parse.js"></script>
   <script src="/static/socket.js"></script>
-  <link rel="stylesheet" href="/static/editcell.css">
   <script src="/static/generateCell.js"></script>
-	<style>
-		body {
-      display: flex;
-      flex-direction: column;
-			margin: 0;
-			padding: 0;
-			width: 100vw;
-      height: 100vh;
-			background-color: #263238;
-      color: #f6f2f8;
-		}
-		table, td, th {
-			border: 1px black solid;
-		}
-    h1, h2, h3, h4, h5, h6 {
-      margin: 0.5em 0;
-    }
-    p {
-      margin: 0.3em 0;
-    }
-		#dm-container {
-      flex: 1;
-      background-color: #455A64;
-      overflow-y: scroll;
-    }
-
-    div.editcell div#output.slide {
-      position: absolute;
-      width: 100vw;
-      height: 100vh;
-      max-height: none;
-      left: 0;
-      top: 0;
-      margin: 0;
-      z-index: 200;
-      overflow: hidden;
-      font-size: 2vw;
-    }
-    div.editcell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
-      margin-left: 2vw;
-    }
-    div.editcell div#output.slide h1 {
-      font-size: 6vw;
-    }
-    div.editcell div#output.slide h2 {
-      font-size: 5vw;
-    }
-    div.editcell div#output.slide h3 {
-      font-size: 4vw;
-    }
-    div.editcell div#output.slide h4 {
-      font-size: 3vw;
-    }
-    div.editcell div#output.slide h5 {
-      font-size: 2vw;
-    }
-    div.editcell div#output.slide h6 {
-      font-size: 1vw;
-    }
-    div.editcell div#output.slide ul,ol {
-     margin-left: 2em;
-    }
-    div.editcell div#output.slide table {
-      margin: 2em auto 0;
-    }
-
-
-    div.editcell div#output span.katex-block {
-      margin: 1em 0;
-      text-align: center;
-    }
-
-    div.editcell {
-      color: black;
-    }
-    div.editcell:before {
-      font-size: 10px;
-      background-color: #757575;
-      display: flex;
-    }
-    div.editcell[data-lang="lisp"]:before {
-      color: white;
-      font-weight: bold;
-      content: 'Common Lisp';
-    }
-    div.editcell[data-lang="md"]:before {
-      color: white;
-      font-weight: bold;
-      content: 'Markdown';
-    }
-    div.editcell div#output {
-      color: #ececec;
-      background-color: #424242;
-    }
-    div.editcell div#output hr {
-      border: 1px solid #ececec;
-      width: 95%;
-    }
-    div.editcell[data-lang="md"] div#output {
-      overflow-y: auto;
-      max-height: none;
-    }
-    div.editcell[data-lang="md"] div#output.slide {
-      overflow-y: hidden;
-    }
-    div.editcell table {
-      border-color: #ececec;
-      border-collapse: collapse;
-      border-spacing: 0;
-    }
-    div.editcell table * {
-      border-color: #ececec;
-    }
-
-    header {
-      display: flex;
-      flex-direction: row;
-      padding: 0 1em;
-      align-items: center;
-    }
-    header h1 {
-      font-size: 20px;
-      margin: 0.5em;
-    }
-    header p#alert {
-      font-size: 12px;
-      overflow: hidden;
-      margin-left: auto;
-      margin-top: auto;
-    }
-    nav {
-      display: flex;
-      flex-direction: row;
-      height: 2em;
-      align-items: center;
-    }
-    nav ul {
-      display: flex;
-      align-items: center;
-      list-style: none;
-    }
-    nav ul#menubar li {
-      font-size: 13px;
-      width: 5em;
-      height: 2em;
-      text-align: center;
-      transition: background-color .1s;
-    }
-    nav ul#menubar li:hover {
-      background-color: #37474F;
-    }
-    nav ul#menubar li label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
-    nav #indicator {
-      background-color: #ececec;
-      border-radius: 8px;
-      color: black;
-      width: 100px;
-      height: 10px;
-      padding: 3px;
-      border: 2px solid white;
-    }
-    nav #indicator.connected {
-      background-color: #449944;
-      color: white;
-    }
-    nav #indicator.notconnected {
-      background-color: #994444;
-      color: white;
-    }
-    nav #indicator.connected:before {
-      position: absolute;
-      content: 'Connected';
-      font-size: 10px;
-    }
-    nav #indicator.notconnected:before {
-      position: absolute;
-      content: 'Not Connected';
-      font-size: 10px;
-    }
-    .hidden {
-      display: none;
-    }
-    ul.submenu {
-      display: block;
-      position: absolute;
-      z-index: 100;
-      visibility: hidden;
-      width: 18em;
-      background-color: #263238;
-      text-align: left;
-      padding: 0;
-    }
-    nav ul#menubar li ul.submenu li {
-      width: 100%;
-      text-align: left;
-      padding-left: 1em;
-    }
-    ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
-      visibility: visible;
-    }
-    .slide-controller {
-      display: none;
-      opacity: 0;
-      background-color: rgba(0, 0, 0, 0.8);
-      position: absolute;
-      top: 40vh;
-      width: 20vh;
-      height: 20vh;
-      border-radius: 4vh;
-      z-index: 400;
-    }
-    .slide-controller.show {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity .2s;
-    }
-    .slide-controller.show:hover {
-      opacity: 1;
-    }
-    .slide-controller#left {
-      left: 0;
-    }
-    .slide-controller#right {
-      right: 0;
-    }
-    path.domain {
-      stroke: #ececec;
-    }
-    g.tick {
-      stroke: #ececec;
-    }
-    line {
-      stroke: #ececec;
-    }
-   #drawer {
-      display: none;
-    }
-	</style>
+  <script src="/static/slide.js"></script>
+  <script src="/static/startup.js"></script>
+  <link rel="stylesheet" href="/static/components/katex/katex.min.css">
+  <link rel="stylesheet" href="/static/editcell.css">
+  <link rel="stylesheet" href="/static/ui.css">
  </head>
-<body unresolved>
+ <body unresolved>
+
   <header>
     <h1>Darkmatter Notebook</h1>
     <p id="alert" class="right"></p>
   </header>
+
   <nav>
     <ul id="menubar">
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-file">
@@ -282,6 +41,7 @@
           <li onclick="window.ls.recall();">Recall package (Ctrl-r)</li>
         </ul>
       </li>
+
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-edit">
         <label for="menu-edit">Edit</label>
         <ul class="submenu">
@@ -295,26 +55,32 @@
           <li onclick="removeCurrentCell();">Remove cell (Ctrl-Del)</li>
         </ul>
       </li>
+
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">
         <label for="menu-view">View</label>
         <ul class="submenu">
           <li onclick="startSlideMode()">Start slide mode (Ctrl-F5)</li>
         </ul>
       </li>
+
       <li><input class="hidden" type="checkbox" name="menuitem" id="menu-tools">
         <label for="menu-tools">Tools</label>
         <ul class="submenu">
           <li onclick="evalAllCells();">Eval all cells (Ctrl-F9)</li>
         </ul>
       </li>
-    </ul>
-    <p id="indicator" class="notconnected"></p>
-  </nav>
-  <div id="drawer">
 
-  </div>
+    </ul>
+
+    <p id="indicator" class="notconnected"></p>
+
+  </nav>
+
+  <div id="drawer"></div>
+
   <div class="slide-controller" id="left" onclick="prevSlide();"> Back </div>
   <div class="slide-controller" id="right" onclick="nextSlide();"> Next </div>
+
   <div id="dm-container">
     {% for data in editcells %}
     <div class="editcell" id="{{ data.id }}" data-count="{{ data.count }}" data-next="{{ data.next }}" data-before="{{ data.before }}" data-lang="{{ data.lang }}">
@@ -325,202 +91,5 @@
     </div>
     {% endfor %}
 	</div>
-  <script>
-  function getEditCells() {
-    return document.getElementsByClassName('editcell');
-  }
-  function getCurrentCellId() {
-    if (window.currentCell) {
-      return window.currentCell;
-    } else {
-      return null;
-    }
-  }
-  function addCellToCurrentAbove() {
-    let container = document.getElementById('dm-container');
-    let current = getCurrentCellId();
-    if (current) {
-      window.editcells[current].addCellToAbove(window.ls, container);
-    }
-  }
-  function addCellToCurrentBelow() {
-    let container = document.getElementById('dm-container');
-    let current = getCurrentCellId();
-    if (current) {
-      window.editcells[current].addCellToBelow(window.ls, container);
-    }
-  }
-  function showSlideController() {
-    let controllers = document.querySelectorAll('.slide-controller');
-    for (c of controllers) {
-      c.className = 'slide-controller show';
-    }
-  }
-  function hideSlideController() {
-    let controllers = document.querySelectorAll('.slide-controller');
-    for (c of controllers) {
-      c.className = 'slide-controller';
-    }
-  }
-  function slideKeyListener(e) {
-    if (e.keyCode === 27) {
-      exitSlideMode();
-      e.preventDefault();
-    } else if (e.keyCode === 37) {
-      prevSlide();
-      e.preventDefault();
-    } else if (e.keyCode === 39 || e.keyCode === 32 || e.keyCode === 13) {
-      nextSlide();
-      e.preventDefault();
-    }
-  }
-
-  function startSlideMode() {
-    if (!window.slideMode) {
-      window.slideMode = true;
-      let editcells = getEditCells();
-      window.slideId = getCurrentCellId();
-      if (window.slideId === null || window.slideId === '') {
-        if (editcells.length > 0) {
-          window.slideId = editcells[0].id;
-        } else {
-          return;
-        }
-      }
-      window.prevActiveElement = document.activeElement;
-      if (window.prevActiveElement) {
-        window.prevActiveElement.blur();
-      }
-      showSlideController();
-      let cell = editcells[window.slideId];
-      cell.querySelector('#output').className = 'show slide';
-      window.addEventListener('keydown', slideKeyListener);
-    }
-  }
-  function exitSlideMode() {
-    if (window.slideMode) {
-      window.slideMode = false;
-      window.prevActiveElement.focus();
-      window.removeEventListener('keydown', slideKeyListener);
-      hideSlideController();
-      let cells = getEditCells();
-      for (cell of cells) {
-        exitCellOutput(cell);
-      }
-    }
-  }
-  function nextSlide() {
-    if (window.slideMode) {
-      let cell = getEditCells()[window.slideId];
-      window.slideId = cell.dataset.next;
-      exitCellOutput(cell);
-      if (window.slideId !== null && window.slideId !== '') {
-        let next = window.editcells[window.slideId];
-        let nextOutput = next.outputElement;
-        if (nextOutput.className.includes('show')) {
-          nextOutput.className = 'show slide';
-        } else {
-          nextSlide();
-        }
-      } else {
-        exitSlideMode();
-      }
-    }
-  }
-  function prevSlide() {
-    if (window.slideMode) {
-      let cells = getEditCells();
-      let cell = cells[window.slideId];
-      window.slideId = cell.dataset.before;
-      if (window.slideId === null || window.slideId === '') {
-        window.slideId = cell.id;
-        return;
-      }
-      exitCellOutput(cell);
-      let prevCell = cells[window.slideId];
-      let output = prevCell.querySelector('#output');
-      if (output.className.includes('show')) {
-        output.className = 'show slide';
-      } else {
-        prevSlide();
-      }
-    }
-  }
-  function exitCellOutput(cell) {
-    let output = cell.querySelector('#output');
-    if (output.className.includes('show')) {
-      output.className = 'show';
-    } else {
-      output.className = '';
-    }
-  }
-  function evalAllCells() {
-    let cells = document.getElementsByClassName('editcell');
-    if (cells.length <= 0) return;
-
-    let first = window.editcells[cells[0].id];
-    console.log(first);
-    first.eval(evalNextCell);
-  }
-  function evalNextCell(cell) {
-    if (cell.next !== '' && cell.editor.getValue().trim() !== '') {
-      window.editcells[cell.next].eval(evalNextCell);
-    }
-  }
-  window.onload = () => {
-    let connector = document.getElementById('indicator');
-    window.ls = new LispSocket(LS_URI, FILE_PATH, connector);
-    window.onkeydown = (e) => {
-      if (e.keyCode === 83 && e.ctrlKey) {
-        e.preventDefault();
-        window.ls.save(document.getElementsByClassName('editcell'));
-        return false;
-      } else if (e.keyCode === 82 && e.ctrlKey) {
-        e.preventDefault();
-        window.ls.recall();
-      } else if (e.keyCode === 116 && e.ctrlKey) {
-        e.preventDefault();
-        startSlideMode();
-      } else if (e.keyCode === 120 && e.ctrlKey) {
-        e.preventDefault();
-        evalAllCells();
-      }
-    }
-    window.editcells = {};
-    let cells = document.getElementsByClassName('editcell');
-    let container = document.getElementById('dm-container');
-    let before = null;
-    for (let i = 0; i < cells.length; i++) {
-      let cell = cells[i];
-      let instance = EditCell.fromElement(cell);
-      if (before && instance.before === '') {
-        instance.element.dataset.before = before.id;
-      }
-      if (instance.next === '' && i < cells.length-1) {
-        instance.element.dataset.next = cells[i+1].dataset.id;
-      }
-      window.editcells[cell.id] = instance;
-      EditCell.connect(window.ls, instance, container);
-      before = instance;
-    }
-    if (cells.length > 0) {
-      let lastcell = cells[cells.length-1];
-      if (lastcell.querySelector('#lisp').innerHTML !== ''
-       || lastcell.querySelector('#md').innerHTML !== ''
-       || lastcell.querySelector('#output').innerHTML !== '') {
-        let instance = EditCell.createElement(Date.now().toString());
-        cells[cells.length-1].dataset.next = instance.id;
-        instance.element.dataset.before = cells[cells.length-1].id;
-        container.appendChild(instance.element);
-        EditCell.connect(window.ls, instance, container);
-      }
-    } else {
-      let instance = EditCell.createElement(Date.now().toString());
-      container.appendChild(instance.element);
-      EditCell.connect(window.ls, instance, container);
-    }
-  }
-  </script>
-
 </body>
 </html>

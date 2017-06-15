@@ -1,0 +1,151 @@
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #263238;
+  color: #f6f2f8;
+}
+table, td, th {
+  border: 1px black solid;
+}
+h1, h2, h3, h4, h5, h6 {
+  margin: 0.5em 0;
+}
+p {
+  margin: 0.3em 0;
+}
+header {
+  display: flex;
+  flex-direction: row;
+  padding: 0 1em;
+  align-items: center;
+}
+header h1 {
+  font-size: 20px;
+  margin: 0.5em;
+}
+header p#alert {
+  font-size: 12px;
+  overflow: hidden;
+  margin-left: auto;
+  margin-top: auto;
+}
+nav {
+  display: flex;
+  flex-direction: row;
+  height: 2em;
+  align-items: center;
+}
+nav ul {
+  display: flex;
+  align-items: center;
+  list-style: none;
+}
+nav ul#menubar li {
+  font-size: 13px;
+  width: 5em;
+  height: 2em;
+  text-align: center;
+  transition: background-color .1s;
+}
+nav ul#menubar li:hover {
+  background-color: #37474F;
+}
+nav ul#menubar li label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+nav #indicator {
+  background-color: #ececec;
+  border-radius: 8px;
+  color: black;
+  width: 100px;
+  height: 10px;
+  padding: 3px;
+  border: 2px solid white;
+}
+nav #indicator.connected {
+  background-color: #449944;
+  color: white;
+}
+nav #indicator.notconnected {
+  background-color: #994444;
+  color: white;
+}
+nav #indicator.connected:before {
+  position: absolute;
+  content: 'Connected';
+  font-size: 10px;
+}
+nav #indicator.notconnected:before {
+  position: absolute;
+  content: 'Not Connected';
+  font-size: 10px;
+}
+.hidden {
+  display: none;
+}
+ul.submenu {
+  display: block;
+  position: absolute;
+  z-index: 100;
+  visibility: hidden;
+  width: 18em;
+  background-color: #263238;
+  text-align: left;
+  padding: 0;
+}
+nav ul#menubar li ul.submenu li {
+  width: 100%;
+  text-align: left;
+  padding-left: 1em;
+}
+ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
+  visibility: visible;
+}
+.slide-controller {
+  display: none;
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 40vh;
+  width: 20vh;
+  height: 20vh;
+  border-radius: 4vh;
+  z-index: 400;
+}
+.slide-controller.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.slide-controller.show:hover {
+  opacity: 1;
+}
+.slide-controller#left {
+  left: 0;
+}
+.slide-controller#right {
+  right: 0;
+}
+path.domain {
+  stroke: #ececec;
+}
+g.tick {
+  stroke: #ececec;
+}
+line {
+  stroke: #ececec;
+}
+#drawer {
+  display: none;
+}
+

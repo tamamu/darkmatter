@@ -1,4 +1,47 @@
 
+function getEditCells() {
+  return document.getElementsByClassName('editcell');
+}
+
+function getCurrentCellId() {
+  if (window.currentCell) {
+    return window.currentCell;
+  } else {
+    return null;
+  }
+}
+
+function addCellToCurrentAbove() {
+  let container = document.getElementById('dm-container');
+  let current = getCurrentCellId();
+  if (current) {
+    window.editcells[current].addCellToAbove(window.ls, container);
+  }
+}
+
+function addCellToCurrentBelow() {
+  let container = document.getElementById('dm-container');
+  let current = getCurrentCellId();
+  if (current) {
+    window.editcells[current].addCellToBelow(window.ls, container);
+  }
+}
+
+function evalAllCells() {
+  let cells = document.getElementsByClassName('editcell');
+  if (cells.length <= 0) return;
+
+  let first = window.editcells[cells[0].id];
+  console.log(first);
+  first.eval(evalNextCell);
+}
+
+function evalNextCell(cell) {
+  if (cell.next !== '' && cell.editor.getValue().trim() !== '') {
+    window.editcells[cell.next].eval(evalNextCell);
+  }
+}
+
 function swapCell(cell1, cell2) {
   let next2 = cell2.dataset.next;
   let prev1 = cell1.dataset.before;

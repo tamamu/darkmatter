@@ -1,4 +1,92 @@
+#dm-container {
+  flex: 1;
+  background-color: #455A64;
+  overflow-y: scroll;
+}
+
+div.editcell div#output.slide {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  left: 0;
+  top: 0;
+  margin: 0;
+  z-index: 200;
+  overflow: hidden;
+  font-size: 2vw;
+}
+div.editcell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
+  margin-left: 2vw;
+}
+div.editcell div#output.slide h1 {
+  font-size: 6vw;
+}
+div.editcell div#output.slide h2 {
+  font-size: 5vw;
+}
+div.editcell div#output.slide h3 {
+  font-size: 4vw;
+}
+div.editcell div#output.slide h4 {
+  font-size: 3vw;
+}
+div.editcell div#output.slide h5 {
+  font-size: 2vw;
+}
+div.editcell div#output.slide h6 {
+  font-size: 1vw;
+}
+div.editcell div#output.slide ul,ol {
+ margin-left: 2em;
+}
+div.editcell div#output.slide table {
+  margin: 2em auto 0;
+}
+
+
+div.editcell div#output span.katex-block {
+  margin: 1em 0;
+  text-align: center;
+}
+
+div.editcell:before {
+  font-size: 10px;
+  background-color: #757575;
+  display: flex;
+}
+div.editcell[data-lang="lisp"]:before {
+  color: white;
+  font-weight: bold;
+  content: 'Common Lisp';
+}
+div.editcell[data-lang="md"]:before {
+  color: white;
+  font-weight: bold;
+  content: 'Markdown';
+}
+div.editcell div#output hr {
+  border: 1px solid #ececec;
+  width: 95%;
+}
+div.editcell[data-lang="md"] div#output {
+  overflow-y: auto;
+  max-height: none;
+}
+div.editcell[data-lang="md"] div#output.slide {
+  overflow-y: hidden;
+}
+div.editcell table {
+  border-color: #ececec;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+div.editcell table * {
+  border-color: #ececec;
+}
+
 div.editcell {
+  color: black;
   margin: 1em auto;
   width: 80vw;
   box-shadow: 10px 10px rgba(0,0,0,0.2);
@@ -14,7 +102,8 @@ div.editcell div#editor {
 
 div.editcell div#output {
   display: none;
-  background-color: #fff;
+  color: #ececec;
+  background-color: #424242;
   min-height: 5em;
   overflow-y: scroll;
   max-height: 450px;
