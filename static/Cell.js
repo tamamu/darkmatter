@@ -16,17 +16,21 @@ class Cell {
     this.renderer = renderer;
   }
 
+  render(returnValue, result) {
+    this.output.innerHTML = returnValue?`<div id="result">${returnValue}</div>`:"";
+    this.output.innerHTML += result;
+    if (this.output.innerHTML.length>0) {
+      this.output.className = 'show';
+    }
+  }
+
   eval() {
     if (this.renderer) {
       return new Promise((resolve, reject) => {
         this.renderer
-            .render(this.lang, this.value)
+            .render(this.lang, this.value, this.id)
             .then((obj) => {
-              this.output.innerHTML = obj.returnValue?`<div id="result">${obj.returnValue}</div>`:"";
-              this.output.innerHTML += obj.result;
-              if (this.output.innerHTML.length>0) {
-                this.output.className = 'show';
-              }
+              this.render(obj.returnValue, obj.result);
               resolve(this);
             });
       });

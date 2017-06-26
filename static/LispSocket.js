@@ -34,14 +34,14 @@ class LispSocket {
 
   onOpen(callback, connection) {
     return function() {
-      this.socket = connection;
+      //this.socket = connection;
       this.attempts = 1;
       this.connected = true;
       if (this.indicator) {
         this.indicator.className = 'connected';
       }
       if (callback) {
-        callback();
+        callback(connection);
       }
     }
   }
@@ -69,33 +69,57 @@ class LispSocket {
   open(callback = null) {
     let connection = new WebSocket(this.wsUri);
     connection.addEventListener('open', this.onOpen(callback, connection).bind(this), false);
-    connection.addEventListener('close', this.onClose(callback).bind(this), false);
+    //connection.addEventListener('close', this.onClose(callback).bind(this), false);
     connection.addEventListener('error', this.onError.bind(this), false);
   }
 
-  eval(src) {
-    if (this.connected) {
-      return new Promise(
-        (resolve, reject) => {
-          let parser = this.parser;
-          let onMessage = (message) => {
-            let json = JSON.parse(message);
-            let returnVal = json['return'];
-            let result = json['output'];
-            resolve({'returnValue':returnVal, 'result':result});
-          };
-          let sender = JSON.stringify({
-            "message": "eval",
-            "data": src || "",
-            "file": this.filepath
-          });
-          $put(this.httpUri, sender).then(onMessage);
-        });
+  onPersist(event) {
+    let json = JSON.parse(event.data);
+    console.log(json);
+    let cell = json['cell'];
+    let returnVal = json['return'];
+    let result = json['output'];
+    let persist = json['persist'];
+    Cells[cell].render(returnVal, result);
+    if (!persist) {
+      this.close();
     }
   }
 
+  eval(src, cellId) {
+    return new Promise(
+      (resolve, reject) => {
+        let parser = this.parser;
+        let onMessage = (message) => {
+          let json = JSON.parse(message);
+          let returnVal = json['return'];
+          let result = json['output'];
+          let persist = json['persist'];
+          if (persist) {
+            this.open((conn) => {
+              let sender = JSON.stringify({
+                "message": "persist",
+                "data": result || "",
+                "file": this.filepath,
+                "cell": cellId
+              });
+              conn.onmessage = this.onPersist.bind(conn);
+              conn.send(sender);
+            });
+          }
+          resolve({'returnValue':returnVal, 'result':result});
+        };
+        let sender = JSON.stringify({
+          "message": "eval",
+          "data": src || "",
+          "file": this.filepath
+        });
+        $put(this.httpUri, sender).then(onMessage);
+      });
+  }
+
   save(cells) {
-    if (this.connected && Modified) {
+    if (Modified) {
       let data = [];
       for (let cell of cells) {
         let ec = Cells[cell.id];
@@ -132,20 +156,16 @@ class LispSocket {
   }
 
   recall() {
-    if (this.connected) {
-      let onmessage = (message) => {
-        let json = JSON.parse(message);
-        let show = document.getElementById('alert');
-        show.innerText = `Recall: new package created at ${(new Date()).toString()})`;
-      }
-      let sender = JSON.stringify({
-        "message": "recall",
-        "file": this.filepath
-      });
-      $put(this.httpUri, sender).then(onmessage);
-    } else {
-      console.log("Can't recall the package.");
+    let onmessage = (message) => {
+      let json = JSON.parse(message);
+      let show = document.getElementById('alert');
+      show.innerText = `Recall: new package created at ${(new Date()).toString()})`;
     }
+    let sender = JSON.stringify({
+      "message": "recall",
+      "file": this.filepath
+    });
+    $put(this.httpUri, sender).then(onmessage);
   }
 }
 

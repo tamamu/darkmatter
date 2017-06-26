@@ -45,10 +45,10 @@ class MDRenderer {
     }
   }
 
-  renderLisp(expr) {
+  renderLisp(expr, cellId) {
     return replaceAsyncAll(expr, /%%(.*?)%%/, (match) => {
       return new Promise((resolve, reject) => {
-        this.lispRenderer.render(match).then(obj => resolve(obj.returnValue));
+        this.lispRenderer.render(match, cellId).then(obj => resolve(obj.returnValue));
       });
     });
   }
@@ -83,8 +83,8 @@ class MDRenderer {
     });
   }
 
-  render(src) {
-    return this.renderLisp(src).catch(expr => this.renderMarkdown(expr));
+  render(src, cellId) {
+    return this.renderLisp(src, cellId).catch(expr => this.renderMarkdown(expr));
   }
 }
 

@@ -153,9 +153,9 @@ class LispRenderer {
 		return table.outerHTML;
 	}
 
-  onEval(src) {
+  onEval(src, cellId) {
     return (resolve, reject) => {
-      this.socket.eval(src).then((obj) => {
+      this.socket.eval(src, cellId).then((obj) => {
         let val = obj['returnValue'];
         let evaluated = obj['result'];
         let res = "";
@@ -183,8 +183,8 @@ class LispRenderer {
     };
   }
 
-	render(src) {
-    let e = this.onEval(src).bind(this);
+	render(src, cellId) {
+    let e = this.onEval(src, cellId).bind(this);
     return new Promise(e);
 	}
 }

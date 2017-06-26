@@ -5,7 +5,7 @@ window.onload = () => {
   let container = document.getElementById('dm-container');
   let indicator = document.getElementById('indicator');
   Socket.attachIndicator(indicator);
-  Socket.open(() => {
+  //Socket.open(() => {
     let renderer = new Renderer();
     let lispRenderer = new LispRenderer(Socket);
     let mdRenderer = new MDRenderer();
@@ -16,7 +16,7 @@ window.onload = () => {
     window.addEventListener('keypress', HandlingKeyBind, true);
     initCells(renderer);
     appendLastCell(renderer, container);
-  });
+  //});
 
 }
 

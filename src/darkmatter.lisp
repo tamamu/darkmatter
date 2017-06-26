@@ -53,20 +53,33 @@
   (data #() :type array))
 (in-package darkmatter)
 
+(defun send-persist (ws cell data closep)
+  (send ws
+    (jsown:to-json
+      `(:obj ("cell" . ,cell)
+             ("output" . ,data)
+             ("persist" . closep)))))
+
 (defmacro get-package (path)
   `(gethash ,path *local-packages*))
 
+(defmacro defextern (package name value)
+  (let ((symbol (read-from-string (format nil "|~A|::~A" package name))))
+  `(defparameter ,symbol ,value)))
+
 ;;; (<package> . "package-name")
 (defun make-temporary-package (path)
+  (print (directory-namestring path))
   (if-let (pkg (gethash path *local-packages*))
           (car pkg)
           (let* ((magic (write-to-string (get-universal-time)))
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
                                     :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
             (eval `(in-package ,(package-name pkg)))
-            (defparameter *last-package* nil)
-            (export *last-package*)
-            (setf *default-pathname-defaults* (pathname (directory-namestring path)))
+            (import 'darkmatter::send-persist)
+            (eval `(defextern ,(package-name pkg)
+                              "*current-directory*"
+                              (pathname (directory-namestring ,path))))
             (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
@@ -79,9 +92,9 @@
     (unuse-package pkg 'darkmatter)
     (delete-package pkg)
     (make-temporary-package path)
-    "{}"))
+    '(:obj)))
 
-(defun eval-string (path src)
+(defun eval-string (path src &key persist-p cell socket)
   (format t "Come: ~A~%" src)
   (let ((pkg (get-package path)))
     (when (null pkg)
@@ -90,6 +103,15 @@
     (if-let (last-package (cdr pkg))
             (eval `(in-package ,last-package))
             (eval `(in-package ,(package-name (car pkg)))))
+;    (eval `(defextern ,(package-name *package*)
+ ;                     "*persist*"
+  ;                    ,persist-p))
+     (let ((psym (read-from-string (format nil "|~A|::*persist*" (package-name *package*))))
+           (csym (read-from-string (format nil "|~A|::*cell*" (package-name *package*))))
+           (ssym (read-from-string (format nil "|~A|::*ws*" (package-name *package*)))))
+      (setf (symbol-value psym) persist-p
+            (symbol-value csym) cell
+            (symbol-value ssym) socket))
   (let* ((standard-output *standard-output*)
          (*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
@@ -111,13 +133,13 @@
     (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
     (format standard-output "Result:~A~%~A~%" return-value so)
-    (jsown:to-json
       `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
+             ("cell" . ,cell)
              ("output" . ,(format nil "~A~A"
                             (if (string= "" eo)
                                 ""
                                 (markup (:pre eo)))
-                            (string-left-trim '(#\Space #\Newline) so))))))))
+                            (string-left-trim '(#\Space #\Newline) so)))))))
 
 (defun save-file (fname data)
   (format t "save~%")
@@ -132,15 +154,13 @@
                     (:md . ,(jsown:val d "md"))
                     (:output . ,(jsown:val d "output")))
           do (setf res (append res (list c))))
-    (print (length res))
     (push :darkmatter res)
     (let ((path fname))
       (unless (ensure-directories-exist fname)
           (setf path "./tmp.dm.lisp"))
       (with-open-file (out path :direction :output :if-exists :supersede)
         (print res out))
-      (jsown:to-json
-        `(:obj ("return" . ,(format nil "~A" fname)))))))
+        `(:obj ("return" . ,(format nil "~A" fname))))))
 
 (defun read-file (env path)
   (format t "read: ~A~%" path)
@@ -208,17 +228,26 @@
   (let ((ws (make-server env)))
     (on :message ws
         (lambda (message)
+          (print message)
           (let* ((json (jsown:parse message))
                  (message (jsown:val json "message"))
+                 (persist-p (list nil))
                  (res (string-case
                         (message)
                         ("eval" (eval-string (jsown:val json "file")
-                                             (jsown:val json "data")))
+                                             (jsown:val json "data")
+                                             :cell (jsown:val json "cell")
+                                             :socket ws))
+                        ("persist" (eval-string (jsown:val json "file")
+                                                (jsown:val json "data")
+                                                :cell (jsown:val json "cell")
+                                                :persist-p persist-p
+                                                :socket ws))
                         ("save" (save-file (jsown:val json "file")
                                            (jsown:val json "data")))
                         ("recall" (recall-package (jsown:val json "file")))
                         (t "{}"))))
-            (send ws res))))
+            (send ws (jsown:to-json res)))))
     (on :open ws
         (lambda ()
           (format t "Connected.~%")))
@@ -252,19 +281,21 @@
     (with-output-to-string (s recv)
       (loop for line = (read-line input nil nil) while line
             do (format s "~A~%" line)))
-    (format t "~%~A~%" recv)
-    (format t "---------------~%")
     (let* ((json (jsown:parse recv))
            (message (jsown:val json "message"))
+           (persist-p (list nil))
            (res (string-case
                   (message)
                   ("eval" (eval-string (jsown:val json "file")
-                                       (jsown:val json "data")))
+                                       (jsown:val json "data")
+                                       :persist-p persist-p))
                   ("save" (save-file (jsown:val json "file")
                                      (jsown:val json "data")))
                   ("recall" (recall-package (jsown:val json "file")))
                   (t "{}"))))
-      `(201 (:content-type "application/json") (,res)))))
+      (when (car persist-p)
+          (setf (jsown:val res "persist") t))
+      `(201 (:content-type "application/json") (,(jsown:to-json res))))))
 
 (defparameter *eval-server*
   (lambda (env)
