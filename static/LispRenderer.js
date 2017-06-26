@@ -125,6 +125,7 @@ class LispRenderer {
 
 	plotArray(obj) {
 		let vec = arrayToList(obj);
+
 		for (let idx in vec) {
 			vec[idx] = [idx].concat(vec[idx]);
 		}
@@ -169,10 +170,10 @@ class LispRenderer {
             } else if (contents.mark === '#') {
               res += this.plotArray(contents);
             } else {
-              res += src.substring(beforeIdx, idx);
+              res += evaluated.substring(beforeIdx, idx);
             }
           } else {
-            res += src.substring(beforeIdx, idx);
+            res += evaluated.substring(beforeIdx, idx);
           }
           beforeIdx = idx;
         }
@@ -187,3 +188,11 @@ class LispRenderer {
     return new Promise(e);
 	}
 }
+
+function arrayToList(obj) {
+  if (typeof(obj) === 'object' && !Array.isArray(obj)) {
+    return obj.children.map(arrayToList);
+  }
+  return obj;
+}
+

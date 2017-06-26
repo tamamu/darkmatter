@@ -1,5 +1,7 @@
 /* Darkmatter.LispSocket */
 
+Modified = false;
+
 class LispSocket {
   constructor(http_uri, ws_uri, filepath) {
     this.wsUri = ws_uri;
@@ -87,20 +89,20 @@ class LispSocket {
             "data": src || "",
             "file": this.filepath
           });
-          requestPut(this.httpUri, sender).then(onMessage);
+          $put(this.httpUri, sender).then(onMessage);
         });
     }
   }
 
   save(cells) {
-    if (this.connected) {
+    if (this.connected && Modified) {
       let data = [];
       for (let cell of cells) {
         let ec = Cells[cell.id];
         let d = {
           "id": cell.id,
           "next": cell.dataset.next || '',
-          "before": cell.dataset.before || '',
+          "prev": cell.dataset.prev || '',
           "count": cell.dataset.count || 0,
           "lisp": cell.querySelector('#lisp').dataset.content,
           "md": cell.querySelector('#md').dataset.content,
@@ -115,15 +117,15 @@ class LispSocket {
         console.log(`Result:${json['return']}`);
         let show = document.getElementById('alert');
         show.innerText = `Saved: ${json['return']} (${(new Date()).toString()})`;
-        window.ls.modified = false;
+        Modified = false;
       };
       let sender = JSON.stringify({
         "message": "save",
-        "file": this.file,
+        "file": this.filepath,
         "data": data
       });
       console.log(sender.length);
-      requestPut(this.httpUri, sender).then(onmessage);
+      $put(this.httpUri, sender).then(onmessage);
     } else {
       console.log("Can't save the code.");
     }
@@ -138,9 +140,9 @@ class LispSocket {
       }
       let sender = JSON.stringify({
         "message": "recall",
-        "file": this.file
+        "file": this.filepath
       });
-      requestPut(this.httpUri, sender).then(onmessage);
+      $put(this.httpUri, sender).then(onmessage);
     } else {
       console.log("Can't recall the package.");
     }
@@ -156,26 +158,18 @@ function test() {
   }, 1000);
 }
 
-function requestPut(uri, data) {
+function $put(uri, data) {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function (){
-      switch(xhr.readyState){
-      case 4: //xhr failed
-        if(xhr.status == 0){
-          alert("Error: send put request failed.");
-          reject(xhr.status);
-        }else{
-          if((200 <= xhr.status && xhr.status < 300) || (xhr.status == 304)){
-            // success
-            resolve(xhr.responseText);
-          }else{
-            //failed
-            reject(xhr.status);
-          }
-        }
-        break;
+    xhr.onload = () => {
+      if (xhr.status >= 200 && this.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject(xhr.statusText);
       }
+    };
+    xhr.onerror = () => {
+      reject(xhr.statusText);
     };
     xhr.open('PUT', uri);
     xhr.send(data);

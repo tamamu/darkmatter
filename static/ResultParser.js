@@ -4,18 +4,7 @@ const WhiteSpaceExp = /\s/;
 
 class ResultParser {
 
-  static parse(src) {
-    return ResultParser.parseLisp(src, 0);
-  }
-
-  static arrayToList(obj) {
-    if (typeof(obj) === 'object' && !Array.isArray(obj)) {
-      return obj.children.map(ResultParser.arrayToList);
-    }
-    return obj;
-  }
-
-  static parseLisp(src, idx) {
+  static parse(src, idx) {
     if (idx === undefined) idx = 0;
     let acc = "";
     let res = null;
@@ -51,7 +40,7 @@ class ResultParser {
   static parseSymbol(src) {
     let n = src.match(NumberExp);
     if (n && n[0].length === src.length) {
-      return ResultParser.parseFloat(src);
+      return parseFloat(src);
     } else {
       return src;
     }
@@ -60,6 +49,7 @@ class ResultParser {
   static parseList(src, idx) {
     let acc = "";
     let res = [];
+    let tmp = "";
 
     while (src.length > idx) {
       switch (src[idx]) {

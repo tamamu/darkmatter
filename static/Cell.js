@@ -1,5 +1,6 @@
 
 let Cells = {};
+let CurrentCell = null;
 
 class Cell {
   constructor(renderer) {
@@ -17,12 +18,18 @@ class Cell {
 
   eval() {
     if (this.renderer) {
-      return this.renderer
-                 .render(this.lang, this.value)
-                 .then((obj) => {
-                   this.output.innerHTML = obj.returnValue?`<div id="return">${obj.returnValue}</div>`:"";
-                   this.output.innerHTML += obj.result;
-                 });
+      return new Promise((resolve, reject) => {
+        this.renderer
+            .render(this.lang, this.value)
+            .then((obj) => {
+              this.output.innerHTML = obj.returnValue?`<div id="result">${obj.returnValue}</div>`:"";
+              this.output.innerHTML += obj.result;
+              if (this.output.innerHTML.length>0) {
+                this.output.className = 'show';
+              }
+              resolve(this);
+            });
+      });
     } else {
       return new Promise((resolve, reject) => {
         resolve(this.output.innerHTML = src);
@@ -36,6 +43,10 @@ class Cell {
     editor.setOptions({maxLines: Infinity, tabSize: 2});
     editor.setFontSize(14);
     editor.$blockScrolling = Infinity;
+    editor.addEventListener('change', () => {Modified=true;});
+    for (bind of KeyBindings) {
+      if (bind.global) editor.commands.bindKey(bind.scheme, null);
+    }
     let session = editor.getSession();
     session.setMode('ace/mode/lisp');
     session.setUseSoftTabs(true);
@@ -68,7 +79,7 @@ class Cell {
       elm.appendChild(obj.output);
     }
     obj.editor = Cell.createEditor(obj.editorElement);
-    obj.editor.addEventListener('focus', (e) => {window.currentCell = obj.element.id;});
+    obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
     let lang = elm.dataset.lang;
     if (lang) {
       obj.editor.getSession().setValue(obj.sources[lang].dataset.content);
@@ -81,7 +92,7 @@ class Cell {
     let obj = new Cell();
     obj.element = document.createElement('div');
     obj.element.id = id;
-    obj.element.className = 'editelement';
+    obj.element.className = 'cell';
     obj.element.dataset.lang = 'lisp';
     obj.element.dataset.next = '';
     obj.element.dataset.prev = prev;
@@ -98,7 +109,7 @@ class Cell {
     obj.editorElement = document.createElement('div');
     obj.editorElement.id = 'editor';
     obj.editor = Cell.createEditor(obj.editorElement);
-    obj.editor.addEventListener('focus', (e) => {window.currentCell = obj.element.id;});
+    obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
     obj.output = document.createElement('div');
     obj.output.id = 'output';
 
@@ -125,6 +136,34 @@ class Cell {
         this.editor.getSession().setMode('ace/mode/lisp');
         break;
     }
+  }
+
+  prependCell() {
+    let instance = Cell.createElement(Date.now().toString(), this.prev);
+    instance.attachRenderer(this.renderer);
+    instance.element.dataset.next = this.id;
+    let prev = null;
+    if (this.prev !== '') {
+      prev = document.getElementById(this.prev);
+      prev.dataset.next = instance.id;
+    }
+    this.element.dataset.prev = instance.id;
+    this.element.parentElement.insertBefore(instance.element, this.element);
+    return instance;
+  }
+
+  appendCell() {
+    let instance = Cell.createElement(Date.now().toString(), this.id);
+    instance.attachRenderer(this.renderer);
+    let next = null;
+    if (this.next !== '') {
+      instance.element.dataset.next = this.next;
+      next = document.getElementById(this.next);
+      next.dataset.prev = instance.id;
+    }
+    this.element.dataset.next = instance.id;
+    this.element.parentElement.insertBefore(instance.element, this.element.nextSibling);
+    return instance;
   }
 
   get lang() {

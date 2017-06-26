@@ -2,14 +2,14 @@ class MDRenderer {
   constructor() {
     this.marked = new marked.Renderer();
     this.lispRenderer = null;
-    this.fetch();
+    this.init();
   }
 
   attachLispRenderer(lispRenderer) {
     this.lispRenderer = lispRenderer;
   }
 
-  fetch() {
+  init() {
     let originalCode = this.marked.code.bind(this.marked);
     this.marked.code = (code, lang, escaped) => {
       let math;
