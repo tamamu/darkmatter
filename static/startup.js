@@ -1,14 +1,36 @@
+
+let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH);
+
 window.onload = () => {
-  let connector = document.getElementById('indicator');
-  window.ls = new LispSocket(LS_URI, FILE_PATH, connector);
-  window.onkeydown = (e) => {
+  let container = document.getElementById('dm-container');
+  let indicator = document.getElementById('indicator');
+  Socket.attachIndicator(indicator);
+  Socket.open(() => {
+    let renderer = new Renderer();
+    let lispRenderer = new LispRenderer(Socket);
+    let mdRenderer = new MDRenderer();
+    mdRenderer.attachLispRenderer(lispRenderer);
+    renderer.registRenderMethod('lisp', lispRenderer);
+    renderer.registRenderMethod('md', mdRenderer);
+    fetchKeyBind('keybind');
+    window.addEventListener('keypress', HandlingKeyBind, true);
+    initCells(renderer);
+    appendLastCell(renderer, container);
+  });
+
+}
+
+/*
+function attachKeyBind(socket) {
+  let binds = document.getElementsByClassName('keybind');
+  window.addEventListener('keydown', (e) => {
     if (e.keyCode === 83 && e.ctrlKey) {
       e.preventDefault();
-      window.ls.save(document.getElementsByClassName('editcell'));
+      socket.save(document.getElementsByClassName('editcell'));
       return false;
     } else if (e.keyCode === 82 && e.ctrlKey) {
       e.preventDefault();
-      window.ls.recall();
+      socket.recall();
     } else if (e.keyCode === 116 && e.ctrlKey) {
       e.preventDefault();
       startSlideMode();
@@ -16,38 +38,44 @@ window.onload = () => {
       e.preventDefault();
       evalAllCells();
     }
-  }
-  window.editcells = {};
-  let cells = document.getElementsByClassName('editcell');
-  let container = document.getElementById('dm-container');
-  let before = null;
-  for (let i = 0; i < cells.length; i++) {
-    let cell = cells[i];
-    let instance = EditCell.fromElement(cell);
-    if (before && instance.before === '') {
-      instance.element.dataset.before = before.id;
+  }, true);
+}
+*/
+
+function initCells(renderer) {
+  let elements = document.getElementsByClassName('cell');
+  let prev = null;
+  for (let i = 0; i < elements.length; i++) {
+    let cell = elements[i];
+    let instance = Cell.fromElement(cell);
+    instance.attachRenderer(renderer);
+    if (prev && instance.prev === '') {
+      instance.element.dataset.prev = prev.id;
     }
-    if (instance.next === '' && i < cells.length-1) {
-      instance.element.dataset.next = cells[i+1].dataset.id;
+    if (instance.next === '' && i < elements.length-1) {
+      instance.element.dataset.next = elements[i+1].id;
     }
-    window.editcells[cell.id] = instance;
-    EditCell.connect(window.ls, instance, container);
-    before = instance;
+    Cells[cell.id] = instance;
+    prev = instance;
   }
-  if (cells.length > 0) {
-    let lastcell = cells[cells.length-1];
-    if (lastcell.querySelector('#lisp').innerHTML !== ''
-     || lastcell.querySelector('#md').innerHTML !== ''
-     || lastcell.querySelector('#output').innerHTML !== '') {
-      let instance = EditCell.createElement(Date.now().toString());
-      cells[cells.length-1].dataset.next = instance.id;
-      instance.element.dataset.before = cells[cells.length-1].id;
+}
+
+function appendLastCell(renderer, container) {
+  let elements = document.getElementsByClassName('cell');
+  if (elements.length > 0) {
+    let lastcell = Cells[elements[elements.length-1].id];
+    if (lastcell.sources.lisp.innerHTML !== ''
+     || lastcell.sources.md.innerHTML !== ''
+     || lastcell.output.innerHTML !== '') {
+      let instance = Cell.createElement(Date.now().toString());
+      instance.attachRenderer(renderer);
+      lastcell.element.dataset.next = instance.id;
+      instance.element.dataset.prev = lastcell.id;
       container.appendChild(instance.element);
-      EditCell.connect(window.ls, instance, container);
     }
   } else {
-    let instance = EditCell.createElement(Date.now().toString());
+    let instance = Cell.createElement(Date.now().toString());
+    instance.attachRenderer(renderer);
     container.appendChild(instance.element);
-    EditCell.connect(window.ls, instance, container);
   }
 }

@@ -4,7 +4,7 @@
   overflow-y: scroll;
 }
 
-div.editcell div#output.slide {
+div.cell div#output.slide {
   position: absolute;
   width: 100vw;
   height: 100vh;
@@ -16,91 +16,91 @@ div.editcell div#output.slide {
   overflow: hidden;
   font-size: 2vw;
 }
-div.editcell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
+div.cell div#output.slide h1,h2,h3,h4,h5,h6,p,pre {
   margin-left: 2vw;
 }
-div.editcell div#output.slide h1 {
+div.cell div#output.slide h1 {
   font-size: 6vw;
 }
-div.editcell div#output.slide h2 {
+div.cell div#output.slide h2 {
   font-size: 5vw;
 }
-div.editcell div#output.slide h3 {
+div.cell div#output.slide h3 {
   font-size: 4vw;
 }
-div.editcell div#output.slide h4 {
+div.cell div#output.slide h4 {
   font-size: 3vw;
 }
-div.editcell div#output.slide h5 {
+div.cell div#output.slide h5 {
   font-size: 2vw;
 }
-div.editcell div#output.slide h6 {
+div.cell div#output.slide h6 {
   font-size: 1vw;
 }
-div.editcell div#output.slide ul,ol {
+div.cell div#output.slide ul,ol {
  margin-left: 2em;
 }
-div.editcell div#output.slide table {
+div.cell div#output.slide table {
   margin: 2em auto 0;
 }
 
 
-div.editcell div#output span.katex-block {
+div.cell div#output span.katex-block {
   margin: 1em 0;
   text-align: center;
 }
 
-div.editcell:before {
+div.cell:before {
   font-size: 10px;
   background-color: #757575;
   display: flex;
 }
-div.editcell[data-lang="lisp"]:before {
+div.cell[data-lang="lisp"]:before {
   color: white;
   font-weight: bold;
   content: 'Common Lisp';
 }
-div.editcell[data-lang="md"]:before {
+div.cell[data-lang="md"]:before {
   color: white;
   font-weight: bold;
   content: 'Markdown';
 }
-div.editcell div#output hr {
+div.cell div#output hr {
   border: 1px solid #ececec;
   width: 95%;
 }
-div.editcell[data-lang="md"] div#output {
+div.cell[data-lang="md"] div#output {
   overflow-y: auto;
   max-height: none;
 }
-div.editcell[data-lang="md"] div#output.slide {
+div.cell[data-lang="md"] div#output.slide {
   overflow-y: hidden;
 }
-div.editcell table {
+div.cell table {
   border-color: #ececec;
   border-collapse: collapse;
   border-spacing: 0;
 }
-div.editcell table * {
+div.cell table * {
   border-color: #ececec;
 }
 
-div.editcell {
+div.cell {
   color: black;
   margin: 1em auto;
   width: 80vw;
   box-shadow: 10px 10px rgba(0,0,0,0.2);
 }
 
-div.editcell div.cache {
+div.cell div.cache {
   display: none;
 }
 
-div.editcell div#editor {
+div.cell div#editor {
   min-height: 5em;
 }
 
-div.editcell div#output {
+div.cell div#output {
   display: none;
   color: #ececec;
   background-color: #424242;
@@ -109,12 +109,12 @@ div.editcell div#output {
   max-height: 450px;
 }
 
-div.editcell div#output.show {
+div.cell div#output.show {
   display: inherit;
   flex-direction: column;
 }
 
-div.editcell div#output div#result {
+div.cell div#output div#result {
   width: 100%;
   background-color: #616161;
   color: #ececec;
