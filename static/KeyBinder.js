@@ -3,13 +3,14 @@ let KeyBindings = [];
 
 function HandlingKeyBind(e) {
   let input = {Alt: e.altKey, Shift: e.shiftKey, Ctrl: e.ctrlKey || e.metaKey,
-               char: e.charCode, code: e.keyCode};
+               name: e.key, code: e.code};
+  console.log(input);
   for (bind of KeyBindings) {
     if (bind.key.Alt   == input.Alt &&
         bind.key.Shift == input.Shift &&
         bind.key.Ctrl  == input.Ctrl &&
-        bind.key.char == input.char &&
-        bind.key.code == input.code) {
+        (bind.key.name == input.name ||
+        bind.key.code == input.code)) {
       e.preventDefault();
       bind.handler.click();
       break;
@@ -28,7 +29,7 @@ function fetchKeyBind(className) {
 
 function parseKeyBind(bind) {
   let keys = bind.split('-');
-  let result = {Alt: false, Shift: false, Ctrl: false, char: 0, code: 0};
+  let result = {Alt: false, Shift: false, Ctrl: false, name: '', code: ''};
   keys.map(s => {
     let u = s.toUpperCase();
     switch (u) {
@@ -42,80 +43,40 @@ function parseKeyBind(bind) {
         result.Alt = true;
         break;
       case 'SPACE':
-        result.char = 32;
+        result.code = 'Space';
         break;
       case 'UP':
-        result.code = 38;
+        result.code = 'ArrowUp';
         break;
       case 'DOWN':
-        result.code = 40;
+        result.code = 'ArrowDown';
         break;
       case 'LEFT':
-        result.code = 37;
+        result.code = 'ArrowLeft';
         break;
       case 'RIGHT':
-        result.code = 39;
+        result.code = 'ArrowRight';
         break;
       case 'DELETE':
-        result.code = 46;
+        result.code = 'Delete';
         break;
       case 'BS':
-        result.code = 8;
+        result.code = 'Backspace';
         break;
-      case 'F1':
-        result.code = 112;
-        break;
-      case 'F2':
-        result.code = 113;
-        break;
-      case 'F3':
-        result.code = 114;
-        break;
-      case 'F4':
-        result.code = 115;
-        break;
-      case 'F5':
-        result.code = 116;
-        break;
-      case 'F6':
-        result.code = 117;
-        break;
-      case 'F7':
-        result.code = 118;
-        break;
-      case 'F8':
-        result.code = 119;
-        break;
-      case 'F9':
-        result.code = 120;
-        break;
-      case 'F10':
-        result.code = 121;
-        break;
-      case 'F11':
-        result.code = 122;
-        break;
-      case 'F12':
-        result.code = 123;
-        break;
-      case 'ESC':
-        result.code = 27;
+     case 'ESC':
+        result.code = 'Escape';
         break;
       case 'INSERT':
-        result.code = 45;
+        result.code = 'Insert';
         break;
       case 'TAB':
-        result.code = 9;
+        result.code = 'Tab';
         break;
       case 'ENTER':
-        result.code = 13;
+        result.code = 'Enter';
         break;
       default:
-        if (result.Shift) {
-          result.char = s.toUpperCase().charCodeAt(0);
-        } else {
-          result.char = s.charCodeAt(0);
-        }
+        result.name = s;
     }
   });
   return result;
