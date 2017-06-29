@@ -30,7 +30,9 @@ class Cell {
         this.renderer
             .render(this.lang, this.value, this.id)
             .then((obj) => {
-              this.render(obj.returnValue, obj.result);
+              if (obj.rendering) {
+                this.render(obj.returnValue, obj.result);
+              }
               resolve(this);
             });
       });
@@ -41,7 +43,7 @@ class Cell {
     }
   }
 
-  static createEditor(elm) {
+  static createEditor(elm, lang = 'lisp') {
     let editor = ace.edit(elm);
     editor.setTheme('ace/theme/monokai');
     editor.setOptions({maxLines: Infinity, tabSize: 2});
@@ -52,7 +54,17 @@ class Cell {
       if (bind.global) editor.commands.bindKey(bind.scheme, null);
     }
     let session = editor.getSession();
-    session.setMode('ace/mode/lisp');
+    switch (lang) {
+      case 'lisp':
+        session.setMode('ace/mode/lisp');
+        break;
+      case 'md':
+        session.setMode('ace/mode/markdown');
+        break;
+      default:
+        session.setMode('ace/mode/lisp');
+        break;
+    }
     session.setUseSoftTabs(true);
     session.setUseWrapMode(true);
     return editor;
@@ -82,7 +94,7 @@ class Cell {
       obj.output.id = 'output';
       elm.appendChild(obj.output);
     }
-    obj.editor = Cell.createEditor(obj.editorElement);
+    obj.editor = Cell.createEditor(obj.editorElement, obj.element.dataset.lang);
     obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
     let lang = elm.dataset.lang;
     if (lang) {
@@ -126,7 +138,8 @@ class Cell {
   }
 
   changeLang() {
-    switch (this.element.dataset.lang) {
+    this.sources[this.lang].innerHTML = this.value;
+    switch (this.lang) {
       case 'lisp':
         this.element.dataset.lang = 'md';
         this.editor.getSession().setMode('ace/mode/markdown');
@@ -140,6 +153,7 @@ class Cell {
         this.editor.getSession().setMode('ace/mode/lisp');
         break;
     }
+    this.editor.getSession().setValue(this.sources[this.lang].innerHTML);
   }
 
   prependCell() {

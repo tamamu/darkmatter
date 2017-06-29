@@ -156,29 +156,34 @@ class LispRenderer {
   onEval(src, cellId) {
     return (resolve, reject) => {
       this.socket.eval(src, cellId).then((obj) => {
-        let val = obj['returnValue'];
-        let evaluated = obj['result'];
-        let res = "";
-        let idx = 0;
-        let beforeIdx = 0;
-        let contents = null;
-        while (evaluated.length > idx) {
-          [contents, idx] = ResultParser.parse(evaluated, idx)
-          if (typeof(contents) === 'object') {
-            if (contents.mark === '#S') {
-              res += this.plotStruct(contents);
-            } else if (contents.mark === '#') {
-              res += this.plotArray(contents);
+        let rendering = obj.rendering;
+        console.log(obj);
+        if (rendering) {
+          let val = obj['returnValue'];
+          let evaluated = obj['result'];
+          let res = "";
+          let idx = 0;
+          let beforeIdx = 0;
+          let contents = null;
+          while (evaluated.length > idx) {
+            [contents, idx] = ResultParser.parse(evaluated, idx)
+            if (typeof(contents) === 'object') {
+              if (contents.mark === '#S') {
+                res += this.plotStruct(contents);
+              } else if (contents.mark === '#') {
+                res += this.plotArray(contents);
+              } else {
+                res += evaluated.substring(beforeIdx, idx);
+              }
             } else {
               res += evaluated.substring(beforeIdx, idx);
             }
-          } else {
-            res += evaluated.substring(beforeIdx, idx);
+            beforeIdx = idx;
           }
-          beforeIdx = idx;
+          resolve({rendering: true, returnValue: val, result: res});
+        } else {
+          resolve({rendering: false});
         }
-
-        resolve({'returnValue':val, 'result':res});
       });
     };
   }

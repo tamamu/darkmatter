@@ -22,10 +22,12 @@
                :djula
                :string-case
                :alexandria
-               :cl-markup)
+               :cl-markup
+               :bordeaux-threads)
   :components ((:module "src"
                 :components
-                ((:file "darkmatter" :depends-on ("infix" "suite"))
+                ((:file "darkmatter" :depends-on ("async" "infix" "suite"))
+                 (:file "async")
                  (:file "infix")
                  (:file "suite"))))
   :description ""

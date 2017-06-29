@@ -1,6 +1,6 @@
 (in-package :cl-user)
 (defpackage darkmatter
-  (:use :cl :websocket-driver)
+  (:use :cl :websocket-driver :bordeaux-threads)
   (:import-from :clack
                 :clackup)
   (:import-from :lack.builder
@@ -16,10 +16,21 @@
                 :escape-string)
   (:import-from :alexandria
                 :if-let
+                :ensure-symbol
                 :read-file-into-string
                 :starts-with-subseq)
+  (:import-from :darkmatter.async
+                :check-task
+                :attach-runtask
+                :attach-task-thread
+                :get-task-output
+                :set-task-kill
+                :get-task-thread
+                :send-recv
+                :exists-task)
   (:export :start :stop :*eval-server*))
 (in-package :darkmatter)
+
 
 (defparameter *appfile-path*
   (asdf:system-relative-pathname "darkmatter" #P"app.lisp"))
@@ -53,19 +64,8 @@
   (data #() :type array))
 (in-package darkmatter)
 
-(defun send-persist (ws cell data closep)
-  (send ws
-    (jsown:to-json
-      `(:obj ("cell" . ,cell)
-             ("output" . ,data)
-             ("persist" . closep)))))
-
 (defmacro get-package (path)
   `(gethash ,path *local-packages*))
-
-(defmacro defextern (package name value)
-  (let ((symbol (read-from-string (format nil "|~A|::~A" package name))))
-  `(defparameter ,symbol ,value)))
 
 ;;; (<package> . "package-name")
 (defun make-temporary-package (path)
@@ -76,10 +76,8 @@
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
                                     :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
             (eval `(in-package ,(package-name pkg)))
-            (import 'darkmatter::send-persist)
-            (eval `(defextern ,(package-name pkg)
-                              "*current-directory*"
-                              (pathname (directory-namestring ,path))))
+            (setf (symbol-value (ensure-symbol :*current-directory* pkg))
+                  (pathname (directory-namestring path)))
             (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
@@ -94,7 +92,7 @@
     (make-temporary-package path)
     '(:obj)))
 
-(defun eval-string (path src &key persist-p cell socket)
+(defun eval-string (path src cell id)
   (format t "Come: ~A~%" src)
   (let ((pkg (get-package path)))
     (when (null pkg)
@@ -103,20 +101,11 @@
     (if-let (last-package (cdr pkg))
             (eval `(in-package ,last-package))
             (eval `(in-package ,(package-name (car pkg)))))
-;    (eval `(defextern ,(package-name *package*)
- ;                     "*persist*"
-  ;                    ,persist-p))
-     (let ((psym (read-from-string (format nil "|~A|::*persist*" (package-name *package*))))
-           (csym (read-from-string (format nil "|~A|::*cell*" (package-name *package*))))
-           (ssym (read-from-string (format nil "|~A|::*ws*" (package-name *package*)))))
-      (setf (symbol-value psym) persist-p
-            (symbol-value csym) cell
-            (symbol-value ssym) socket))
   (let* ((standard-output *standard-output*)
          (*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
-         (eo "")
-         (so "")
+         ($<error-output> "")
+         ($<standard-output> "")
          (sexp nil)
          (return-value nil)
          (pos 0))
@@ -124,22 +113,26 @@
       (loop while pos
             do (multiple-value-setq (sexp pos)
                  (read-from-string src :eof-error-p t :start pos))
+               (setf sexp (attach-runtask sexp))
                (setf return-value (eval sexp)))
       (END-OF-FILE (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
-    (setf eo (get-output-stream-string *error-output*))
-    (setf so (get-output-stream-string *standard-output*))
-;    (setf eo "")
+    (setf $<error-output> (get-output-stream-string *error-output*))
+    (setf $<standard-output> (get-output-stream-string *standard-output*))
     (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
-    (format standard-output "Result:~A~%~A~%" return-value so)
-      `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
-             ("cell" . ,cell)
-             ("output" . ,(format nil "~A~A"
-                            (if (string= "" eo)
-                                ""
-                                (markup (:pre eo)))
-                            (string-left-trim '(#\Space #\Newline) so)))))))
+    (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
+    (if-let (task (check-task cell id return-value))
+            task
+            `(:obj ("message" . "result")
+                   ("return" .
+                    ,(escape-string (format nil "~A" return-value)))
+                   ("output" .
+                    ,(format nil "~A~A"
+                       (if (string= "" $<error-output>)
+                           ""
+                           (markup (:pre $<error-output>)))
+                       (string-left-trim '(#\Space #\Newline) $<standard-output>))))))))
 
 (defun save-file (fname data)
   (format t "save~%")
@@ -193,7 +186,8 @@
                         :root (directory-namestring path)
                         :host (getf env :server-name)
                         :port (getf env :server-port)
-                        :path path))))
+                        :path path
+                        :token (write-to-string (get-universal-time))))))
 
 (defun get-editable-file (path env)
   (make-temporary-package path)
@@ -206,7 +200,8 @@
                               :root (directory-namestring path)
                               :host (getf env :server-name)
                               :port (getf env :server-port)
-                              :path path)))
+                              :path path
+                              :token (write-to-string (get-universal-time)))))
         (notfound env)))))
 
 (defun notfound (env)
@@ -223,31 +218,37 @@
         (funcall app env))))
   "Middleware for binding websocket message")
 
+(defun bind-init (ws id)
+  (attach-task-thread id)
+  (send ws
+        (jsown:to-json
+          `(:obj ("message" . "init")
+                 ("id" . ,id)
+                 ("output" . (get-task-output id))))))
+
+(defun bind-kill (ws id)
+  (if-let (task (exists-task id))
+          (progn
+            (set-task-kill id)
+            (if-let (thread (get-task-thread id))
+                    (join-thread thread))))
+  (send-recv ws id))
+
 (defun bind-message (env)
   "Bind websocket messages"
-  (let ((ws (make-server env)))
+  (let ((ws (make-server env))
+        (addr (getf env :remote-addr))
+        (port (write-to-string (getf env :remote-port))))
     (on :message ws
         (lambda (message)
-          (print message)
           (let* ((json (jsown:parse message))
                  (message (jsown:val json "message"))
-                 (persist-p (list nil))
-                 (res (string-case
-                        (message)
-                        ("eval" (eval-string (jsown:val json "file")
-                                             (jsown:val json "data")
-                                             :cell (jsown:val json "cell")
-                                             :socket ws))
-                        ("persist" (eval-string (jsown:val json "file")
-                                                (jsown:val json "data")
-                                                :cell (jsown:val json "cell")
-                                                :persist-p persist-p
-                                                :socket ws))
-                        ("save" (save-file (jsown:val json "file")
-                                           (jsown:val json "data")))
-                        ("recall" (recall-package (jsown:val json "file")))
-                        (t "{}"))))
-            (send ws (jsown:to-json res)))))
+                 (id (jsown:val json "id")))
+            (string-case (message)
+              ("init" (bind-init ws id))
+              ("recv" (send-recv ws id))
+              ("kill" (bind-kill ws id))
+              (t (send ws (jsown:to-json '(:obj ("message" . "none")))))))))
     (on :open ws
         (lambda ()
           (format t "Connected.~%")))
@@ -256,8 +257,7 @@
           (format t "Got an error:~S~%" error)))
     (on :close ws
         (lambda (code reason)
-          (format t "Closed because '~A' (Code=~A)~%" reason code)
-          (start-connection ws)))
+          (format t "Closed because '~A' (Code=~A)~%" reason code)))
     (lambda (responder)
       (declare (ignore responder))
       (start-connection ws))))
@@ -277,24 +277,31 @@
   (let ((input (flexi-streams:make-flexi-stream
                  (getf env :raw-body)
                  :external-format (flexi-streams:make-external-format :utf-8)))
-        (recv (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+        (recv (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
+        (addr (getf env :remote-addr))
+        (port (write-to-string (getf env :remote-port))))
     (with-output-to-string (s recv)
       (loop for line = (read-line input nil nil) while line
             do (format s "~A~%" line)))
     (let* ((json (jsown:parse recv))
            (message (jsown:val json "message"))
-           (persist-p (list nil))
+           (cell (jsown:val json "cell"))
+           (token (jsown:val json "token"))
+           (file (jsown:val json "file"))
+           (id (concatenate 'string addr
+                                ":" port
+                                ":" token
+                                ":" file))
            (res (string-case
                   (message)
-                  ("eval" (eval-string (jsown:val json "file")
+                  ("eval" (eval-string file
                                        (jsown:val json "data")
-                                       :persist-p persist-p))
-                  ("save" (save-file (jsown:val json "file")
+                                       cell
+                                       id))
+                  ("save" (save-file file
                                      (jsown:val json "data")))
-                  ("recall" (recall-package (jsown:val json "file")))
+                  ("recall" (recall-package file))
                   (t "{}"))))
-      (when (car persist-p)
-          (setf (jsown:val res "persist") t))
       `(201 (:content-type "application/json") (,(jsown:to-json res))))))
 
 (defparameter *eval-server*

@@ -1,5 +1,5 @@
 
-let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH);
+let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH, TOKEN);
 
 window.onload = () => {
   let container = document.getElementById('dm-container');
@@ -13,7 +13,7 @@ window.onload = () => {
     renderer.registRenderMethod('lisp', lispRenderer);
     renderer.registRenderMethod('md', mdRenderer);
     fetchKeyBind('keybind');
-    window.addEventListener('keypress', HandlingKeyBind, true);
+    window.addEventListener('keydown', HandlingKeyBind, true);
     initCells(renderer);
     appendLastCell(renderer, container);
   //});

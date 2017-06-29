@@ -79,7 +79,7 @@ class MDRenderer {
   renderMarkdown(expr) {
     return new Promise((resolve, reject) => {
       let result = marked(expr, {breaks: true, renderer: this.marked});
-      resolve({returnValue: null, result: result});
+      resolve({rendering: true, returnValue: null, result: result});
     });
   }
 
