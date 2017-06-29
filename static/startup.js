@@ -3,42 +3,19 @@ let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH, TOKEN);
 
 window.onload = () => {
   let container = document.getElementById('dm-container');
-  //Socket.open(() => {
-    let renderer = new Renderer();
-    let lispRenderer = new LispRenderer(Socket);
-    let mdRenderer = new MDRenderer();
-    mdRenderer.attachLispRenderer(lispRenderer);
-    renderer.registRenderMethod('lisp', lispRenderer);
-    renderer.registRenderMethod('md', mdRenderer);
-    fetchKeyBind('keybind');
-    window.addEventListener('keydown', HandlingKeyBind, true);
-    initCells(renderer);
-    appendLastCell(renderer, container);
-  //});
+  let renderer = new Renderer();
+  let lispRenderer = new LispRenderer(Socket);
+  let mdRenderer = new MDRenderer();
+  mdRenderer.attachLispRenderer(lispRenderer);
+  renderer.registRenderMethod('lisp', lispRenderer);
+  renderer.registRenderMethod('md', mdRenderer);
+  fetchKeyBind('keybind');
+  window.addEventListener('keydown', HandlingKeyBind, true);
+  initCells(renderer);
+  appendLastCell(renderer, container);
+  attachCloseFunction();
 
 }
-
-/*
-function attachKeyBind(socket) {
-  let binds = document.getElementsByClassName('keybind');
-  window.addEventListener('keydown', (e) => {
-    if (e.keyCode === 83 && e.ctrlKey) {
-      e.preventDefault();
-      socket.save(document.getElementsByClassName('editcell'));
-      return false;
-    } else if (e.keyCode === 82 && e.ctrlKey) {
-      e.preventDefault();
-      socket.recall();
-    } else if (e.keyCode === 116 && e.ctrlKey) {
-      e.preventDefault();
-      startSlideMode();
-    } else if (e.keyCode === 120 && e.ctrlKey) {
-      e.preventDefault();
-      evalAllCells();
-    }
-  }, true);
-}
-*/
 
 function initCells(renderer) {
   let elements = document.getElementsByClassName('cell');

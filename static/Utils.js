@@ -1,4 +1,18 @@
 
+function closeAllSubMenu() {
+  let submenus = document.getElementsByName('menuitem');
+  for (let check of submenus) {
+    check.checked = false;
+  }
+}
+
+function attachCloseFunction() {
+  let menuitems = document.querySelectorAll('.submenu li');
+  for (let item of menuitems) {
+    item.addEventListener('click', closeAllSubMenu);
+  }
+}
+
 function evalCurrent(forward = false) {
   if (CurrentCell) {
     Cells[CurrentCell].eval().then((cell) => {
