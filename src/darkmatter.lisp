@@ -1,6 +1,6 @@
 (in-package :cl-user)
 (defpackage darkmatter
-  (:use :cl :websocket-driver)
+  (:use :cl :websocket-driver :bordeaux-threads)
   (:import-from :clack
                 :clackup)
   (:import-from :lack.builder
@@ -16,10 +16,21 @@
                 :escape-string)
   (:import-from :alexandria
                 :if-let
+                :ensure-symbol
                 :read-file-into-string
                 :starts-with-subseq)
+  (:import-from :darkmatter.async
+                :check-task
+                :attach-runtask
+                :attach-task-thread
+                :get-task-output
+                :set-task-kill
+                :get-task-thread
+                :send-recv
+                :exists-task)
   (:export :start :stop :*eval-server*))
 (in-package :darkmatter)
+
 
 (defparameter *appfile-path*
   (asdf:system-relative-pathname "darkmatter" #P"app.lisp"))
@@ -58,15 +69,15 @@
 
 ;;; (<package> . "package-name")
 (defun make-temporary-package (path)
+  (print (directory-namestring path))
   (if-let (pkg (gethash path *local-packages*))
           (car pkg)
           (let* ((magic (write-to-string (get-universal-time)))
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
                                     :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
             (eval `(in-package ,(package-name pkg)))
-            (defparameter *last-package* nil)
-            (export *last-package*)
-            (setf *default-pathname-defaults* (pathname (directory-namestring path)))
+            (setf (symbol-value (ensure-symbol :*current-directory* pkg))
+                  (pathname (directory-namestring path)))
             (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
@@ -79,9 +90,9 @@
     (unuse-package pkg 'darkmatter)
     (delete-package pkg)
     (make-temporary-package path)
-    "{}"))
+    '(:obj)))
 
-(defun eval-string (path src)
+(defun eval-string (path src cell id)
   (format t "Come: ~A~%" src)
   (let ((pkg (get-package path)))
     (when (null pkg)
@@ -93,8 +104,8 @@
   (let* ((standard-output *standard-output*)
          (*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
-         (eo "")
-         (so "")
+         ($<error-output> "")
+         ($<standard-output> "")
          (sexp nil)
          (return-value nil)
          (pos 0))
@@ -102,22 +113,26 @@
       (loop while pos
             do (multiple-value-setq (sexp pos)
                  (read-from-string src :eof-error-p t :start pos))
+               (setf sexp (attach-runtask sexp))
                (setf return-value (eval sexp)))
       (END-OF-FILE (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
-    (setf eo (get-output-stream-string *error-output*))
-    (setf so (get-output-stream-string *standard-output*))
-;    (setf eo "")
+    (setf $<error-output> (get-output-stream-string *error-output*))
+    (setf $<standard-output> (get-output-stream-string *standard-output*))
     (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
-    (format standard-output "Result:~A~%~A~%" return-value so)
-    (jsown:to-json
-      `(:obj ("return" . ,(escape-string (format nil "~A" return-value)))
-             ("output" . ,(format nil "~A~A"
-                            (if (string= "" eo)
-                                ""
-                                (markup (:pre eo)))
-                            (string-left-trim '(#\Space #\Newline) so))))))))
+    (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
+    (if-let (task (check-task cell id return-value))
+            task
+            `(:obj ("message" . "result")
+                   ("return" .
+                    ,(escape-string (format nil "~A" return-value)))
+                   ("output" .
+                    ,(format nil "~A~A"
+                       (if (string= "" $<error-output>)
+                           ""
+                           (markup (:pre $<error-output>)))
+                       (string-left-trim '(#\Space #\Newline) $<standard-output>))))))))
 
 (defun save-file (fname data)
   (format t "save~%")
@@ -132,15 +147,13 @@
                     (:md . ,(jsown:val d "md"))
                     (:output . ,(jsown:val d "output")))
           do (setf res (append res (list c))))
-    (print (length res))
     (push :darkmatter res)
     (let ((path fname))
       (unless (ensure-directories-exist fname)
           (setf path "./tmp.dm.lisp"))
       (with-open-file (out path :direction :output :if-exists :supersede)
         (print res out))
-      (jsown:to-json
-        `(:obj ("return" . ,(format nil "~A" fname)))))))
+        `(:obj ("return" . ,(format nil "~A" fname))))))
 
 (defun read-file (env path)
   (format t "read: ~A~%" path)
@@ -173,7 +186,8 @@
                         :root (directory-namestring path)
                         :host (getf env :server-name)
                         :port (getf env :server-port)
-                        :path path))))
+                        :path path
+                        :token (write-to-string (get-universal-time))))))
 
 (defun get-editable-file (path env)
   (make-temporary-package path)
@@ -186,7 +200,8 @@
                               :root (directory-namestring path)
                               :host (getf env :server-name)
                               :port (getf env :server-port)
-                              :path path)))
+                              :path path
+                              :token (write-to-string (get-universal-time)))))
         (notfound env)))))
 
 (defun notfound (env)
@@ -203,22 +218,37 @@
         (funcall app env))))
   "Middleware for binding websocket message")
 
+(defun bind-init (ws id)
+  (attach-task-thread id)
+  (send ws
+        (jsown:to-json
+          `(:obj ("message" . "init")
+                 ("id" . ,id)
+                 ("output" . (get-task-output id))))))
+
+(defun bind-kill (ws id)
+  (if-let (task (exists-task id))
+          (progn
+            (set-task-kill id)
+            (if-let (thread (get-task-thread id))
+                    (join-thread thread))))
+  (send-recv ws id))
+
 (defun bind-message (env)
   "Bind websocket messages"
-  (let ((ws (make-server env)))
+  (let ((ws (make-server env))
+        (addr (getf env :remote-addr))
+        (port (write-to-string (getf env :remote-port))))
     (on :message ws
         (lambda (message)
           (let* ((json (jsown:parse message))
                  (message (jsown:val json "message"))
-                 (res (string-case
-                        (message)
-                        ("eval" (eval-string (jsown:val json "file")
-                                             (jsown:val json "data")))
-                        ("save" (save-file (jsown:val json "file")
-                                           (jsown:val json "data")))
-                        ("recall" (recall-package (jsown:val json "file")))
-                        (t "{}"))))
-            (send ws res))))
+                 (id (jsown:val json "id")))
+            (string-case (message)
+              ("init" (bind-init ws id))
+              ("recv" (send-recv ws id))
+              ("kill" (bind-kill ws id))
+              (t (send ws (jsown:to-json '(:obj ("message" . "none")))))))))
     (on :open ws
         (lambda ()
           (format t "Connected.~%")))
@@ -227,8 +257,7 @@
           (format t "Got an error:~S~%" error)))
     (on :close ws
         (lambda (code reason)
-          (format t "Closed because '~A' (Code=~A)~%" reason code)
-          (start-connection ws)))
+          (format t "Closed because '~A' (Code=~A)~%" reason code)))
     (lambda (responder)
       (declare (ignore responder))
       (start-connection ws))))
@@ -248,23 +277,32 @@
   (let ((input (flexi-streams:make-flexi-stream
                  (getf env :raw-body)
                  :external-format (flexi-streams:make-external-format :utf-8)))
-        (recv (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t)))
+        (recv (make-array 0 :element-type 'character :fill-pointer 0 :adjustable t))
+        (addr (getf env :remote-addr))
+        (port (write-to-string (getf env :remote-port))))
     (with-output-to-string (s recv)
       (loop for line = (read-line input nil nil) while line
             do (format s "~A~%" line)))
-    (format t "~%~A~%" recv)
-    (format t "---------------~%")
     (let* ((json (jsown:parse recv))
            (message (jsown:val json "message"))
+           (cell (jsown:val json "cell"))
+           (token (jsown:val json "token"))
+           (file (jsown:val json "file"))
+           (id (concatenate 'string addr
+                                ":" port
+                                ":" token
+                                ":" file))
            (res (string-case
                   (message)
-                  ("eval" (eval-string (jsown:val json "file")
-                                       (jsown:val json "data")))
-                  ("save" (save-file (jsown:val json "file")
+                  ("eval" (eval-string file
+                                       (jsown:val json "data")
+                                       cell
+                                       id))
+                  ("save" (save-file file
                                      (jsown:val json "data")))
-                  ("recall" (recall-package (jsown:val json "file")))
+                  ("recall" (recall-package file))
                   (t "{}"))))
-      `(201 (:content-type "application/json") (,res)))))
+      `(201 (:content-type "application/json") (,(jsown:to-json res))))))
 
 (defparameter *eval-server*
   (lambda (env)

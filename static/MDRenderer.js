@@ -45,10 +45,10 @@ class MDRenderer {
     }
   }
 
-  renderLisp(expr) {
+  renderLisp(expr, cellId) {
     return replaceAsyncAll(expr, /%%(.*?)%%/, (match) => {
       return new Promise((resolve, reject) => {
-        this.lispRenderer.render(match).then(obj => resolve(obj.returnValue));
+        this.lispRenderer.render(match, cellId).then(obj => resolve(obj.returnValue));
       });
     });
   }
@@ -79,12 +79,12 @@ class MDRenderer {
   renderMarkdown(expr) {
     return new Promise((resolve, reject) => {
       let result = marked(expr, {breaks: true, renderer: this.marked});
-      resolve({returnValue: null, result: result});
+      resolve({rendering: true, returnValue: null, result: result});
     });
   }
 
-  render(src) {
-    return this.renderLisp(src).catch(expr => this.renderMarkdown(expr));
+  render(src, cellId) {
+    return this.renderLisp(src, cellId).catch(expr => this.renderMarkdown(expr));
   }
 }
 

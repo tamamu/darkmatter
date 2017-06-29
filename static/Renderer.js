@@ -7,7 +7,7 @@ class Renderer {
     this.methods[name] = method;
   }
 
-  render(methodName, src) {
-    return this.methods[methodName].render(src);
+  render(methodName, src, cellId) {
+    return this.methods[methodName].render(src, cellId);
   }
 }

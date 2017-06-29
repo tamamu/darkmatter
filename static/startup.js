@@ -1,11 +1,11 @@
 
-let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH);
+let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH, TOKEN);
 
 window.onload = () => {
   let container = document.getElementById('dm-container');
   let indicator = document.getElementById('indicator');
   Socket.attachIndicator(indicator);
-  Socket.open(() => {
+  //Socket.open(() => {
     let renderer = new Renderer();
     let lispRenderer = new LispRenderer(Socket);
     let mdRenderer = new MDRenderer();
@@ -13,10 +13,10 @@ window.onload = () => {
     renderer.registRenderMethod('lisp', lispRenderer);
     renderer.registRenderMethod('md', mdRenderer);
     fetchKeyBind('keybind');
-    window.addEventListener('keypress', HandlingKeyBind, true);
+    window.addEventListener('keydown', HandlingKeyBind, true);
     initCells(renderer);
     appendLastCell(renderer, container);
-  });
+  //});
 
 }
 
