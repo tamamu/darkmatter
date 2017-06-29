@@ -21,10 +21,13 @@ class Cell {
     this.output.innerHTML += result;
     if (this.output.innerHTML.length>0) {
       this.output.className = 'show';
+      this.element.classList.add('success');
     }
   }
 
   eval() {
+    this.element.classList.remove('success');
+    this.element.classList.add('oneval');
     if (this.renderer) {
       return new Promise((resolve, reject) => {
         this.renderer
@@ -33,11 +36,13 @@ class Cell {
               if (obj.rendering) {
                 this.render(obj.returnValue, obj.result);
               }
+              this.element.classList.remove('oneval');
               resolve(this);
             });
       });
     } else {
       return new Promise((resolve, reject) => {
+        this.element.classList.remove('oneval');
         resolve(this.output.innerHTML = src);
       });
     }

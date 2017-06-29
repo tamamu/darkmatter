@@ -55,6 +55,12 @@ div.cell:before {
   background-color: #757575;
   display: flex;
 }
+div.cell.oneval:before {
+  background-color: #99bbcc;
+}
+div.cell.success:before {
+  background-color: #65b970;
+}
 div.cell[data-lang="lisp"]:before {
   color: white;
   font-weight: bold;
