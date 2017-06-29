@@ -3,8 +3,6 @@ let Socket = new LispSocket(HTTP_URI, LS_URI, FILE_PATH, TOKEN);
 
 window.onload = () => {
   let container = document.getElementById('dm-container');
-  let indicator = document.getElementById('indicator');
-  Socket.attachIndicator(indicator);
   //Socket.open(() => {
     let renderer = new Renderer();
     let lispRenderer = new LispRenderer(Socket);

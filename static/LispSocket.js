@@ -12,7 +12,6 @@ class LispSocket {
     this.attempts = 1;
     this.socket = null;
     this.parser = null;
-    this.indicator = null;
     this.filepath = filepath;
   }
 
@@ -30,18 +29,11 @@ class LispSocket {
     this.parser = parser;
   }
 
-  attachIndicator(indicator) {
-    this.indicator = indicator;
-  }
-
   onOpen(callback, connection) {
     return function() {
       //this.socket = connection;
       this.attempts = 1;
       this.connected = true;
-      if (this.indicator) {
-        this.indicator.className = 'connected';
-      }
       if (callback) {
         callback(connection);
       }
@@ -51,9 +43,6 @@ class LispSocket {
   onClose(callback) {
     return function() {
       this.connected = false;
-      if (this.indicator) {
-        this.indicator.className = 'disconnected';
-      }
       this.attempts += 1;
       let time = LispSocket.generateInterval(this.attempts);
       setTimeout(() => {
