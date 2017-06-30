@@ -64,7 +64,9 @@ function evalAllCells() {
   if (elements.length <= 0) return;
 
   let first = Cells[elements[0].id];
-  evalNextCell(first);
+  first.eval().then((cell) => {
+    evalNextCell(first);
+  });
 }
 
 function evalNextCell(cell) {
