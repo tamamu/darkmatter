@@ -81,11 +81,8 @@ class LispSocket {
           let mes = json.message;
           if (mes === 'alert_start') {
             let id = json['id'];
-            console.log(Alerts[cellId]);
-            if (Alerts[cellId])console.log(Alerts[cellId].exited);
             if (Alerts[cellId] && Alerts[cellId].exited === false) {
               Alerts[cellId].kill().then(() => {
-                console.log('ext');
                 this.spawnAlert(cellId, id);
               });
               Alerts[cellId].kill();
@@ -142,7 +139,6 @@ class LispSocket {
         "token": this.token,
         "cell": ''
       });
-      console.log(sender.length);
       $put(this.httpUri, sender).then(onmessage);
     } else {
       console.log("Can't save the code.");
