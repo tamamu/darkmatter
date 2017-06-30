@@ -13,6 +13,10 @@ function attachCloseFunction() {
   }
 }
 
+function saveFile() {
+  Socket.save(document.getElementsByClassName('cell'));
+}
+
 function evalCurrent(forward = false) {
   if (CurrentCell) {
     Cells[CurrentCell].eval().then((cell) => {
@@ -152,4 +156,8 @@ function focusPrevCell() {
   }
 }
 
-
+function setKeyBind(mode) {
+  for (let cell in Cells) {
+    Cells[cell].changeKeyBind(mode);
+  }
+}

@@ -1,6 +1,13 @@
 
 let Cells = {};
 let CurrentCell = null;
+ace.config.loadModule('ace/keybinding/vim', (m) => {
+  let VimApi = require('ace/keyboard/vim').Vim;
+  VimApi.defineEx('write', 'w', () => {
+    saveFile();
+  });
+});
+
 
 class Cell {
   constructor(renderer) {
@@ -10,6 +17,7 @@ class Cell {
     this.editor = null;
     this.output = null;
     this.renderer = renderer;
+    this.keyboardHandler = null;
   }
 
   attachRenderer(renderer) {
@@ -101,6 +109,7 @@ class Cell {
     }
     obj.editor = Cell.createEditor(obj.editorElement, obj.element.dataset.lang);
     obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
+    obj.keyboardHandler = obj.editor.getKeyboardHandler();
     let lang = elm.dataset.lang;
     if (lang) {
       obj.editor.getSession().setValue(obj.sources[lang].dataset.content);
@@ -131,6 +140,7 @@ class Cell {
     obj.editorElement.id = 'editor';
     obj.editor = Cell.createEditor(obj.editorElement);
     obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
+    obj.keyboardHandler = obj.editor.getKeyboardHandler();
     obj.output = document.createElement('div');
     obj.output.id = 'output';
 
@@ -140,6 +150,20 @@ class Cell {
     obj.element.appendChild(obj.output);
     Cells[id] = obj;
     return obj;
+  }
+
+  changeKeyBind(mode) {
+    switch (mode) {
+      case 'vim':
+        this.editor.setKeyboardHandler('ace/keyboard/vim');
+        break;
+      case 'emacs':
+        this.editor.setKeyboardHandler('ace/keyboard/emacs');
+        break;
+      default:
+        this.editor.setKeyboardHandler(this.keyboardHandler);;
+        break;
+    }
   }
 
   changeLang() {

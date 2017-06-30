@@ -45,7 +45,7 @@
         <label for="menu-file">File</label>
         <ul class="submenu">
           <li class="keybind" data-key="Ctrl-s"
-            onclick="Socket.save(document.getElementsByClassName('cell'));">Save</li>
+            onclick="saveFile();">Save</li>
           <li class="keybind" data-key="Ctrl-r"
             onclick="Socket.recall();">Recall package</li>
         </ul>
@@ -90,6 +90,12 @@
         <ul class="submenu">
           <li class="keybind" data-key="Ctrl-F9"
             onclick="evalAllCells();">Eval all cells</li>
+          <li class="keybind" data-key="Shift-Ctrl-v"
+            onclick="setKeyBind('vim');">Vim mode</li>
+          <li class="keybind" data-key="Shift-Ctrl-e"
+            onclick="setKeyBind('emacs');">Emacs mode</li>
+          <li class="keybind" data-key="Shift-Ctrl-d"
+            onclick="setKeyBind()">Default mode</li>
         </ul>
       </li>
 
