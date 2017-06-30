@@ -157,7 +157,6 @@ class LispRenderer {
     return (resolve, reject) => {
       this.socket.eval(src, cellId).then((obj) => {
         let rendering = obj.rendering;
-        console.log(obj);
         if (rendering) {
           let val = obj['returnValue'];
           let evaluated = obj['result'];

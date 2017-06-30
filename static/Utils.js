@@ -70,7 +70,6 @@ function evalAllCells() {
 }
 
 function evalNextCell(cell) {
-  console.log(cell);
   if (cell.next !== '' && cell.editor.getValue().trim() !== '') {
     Cells[cell.next].eval().then((cell) => {
       evalNextCell(cell);
