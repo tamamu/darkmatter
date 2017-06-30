@@ -126,3 +126,7 @@ div.cell div#output div#result {
   color: #ececec;
   font-weight: bold;
 }
+
+div.cell div.ace_focus {
+  box-shadow: 0px 0px 2px 1px rgba(100, 255, 100, 0.5);
+}
