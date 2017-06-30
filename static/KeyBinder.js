@@ -3,8 +3,7 @@ let KeyBindings = [];
 
 function HandlingKeyBind(e) {
   let input = {Alt: e.altKey, Shift: e.shiftKey, Ctrl: e.ctrlKey || e.metaKey,
-               name: e.key, code: e.code};
-  console.log(input);
+               name: e.key.toUpperCase(), code: e.code};
   for (bind of KeyBindings) {
     if (bind.key.Alt   == input.Alt &&
         bind.key.Shift == input.Shift &&
@@ -76,7 +75,7 @@ function parseKeyBind(bind) {
         result.code = 'Enter';
         break;
       default:
-        result.name = s;
+        result.name = s.toUpperCase();
     }
   });
   return result;
