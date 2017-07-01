@@ -18,7 +18,7 @@ function saveFile() {
 }
 
 function evalCurrent(forward = false) {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     Cells[CurrentCell].eval().then((cell) => {
       if (cell.next === undefined || cell.next === '') {
         let nextCell = cell.appendCell();
@@ -42,19 +42,19 @@ function evalCurrentForward() {
 }
 
 function changeLangCurrent() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     Cells[CurrentCell].changeLang();
   }
 }
 
 function prependCellCurrent() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     Cells[CurrentCell].prependCell();
   }
 }
 
 function appendCellCurrent() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     Cells[CurrentCell].appendCell();
   }
 }
@@ -71,9 +71,13 @@ function evalAllCells() {
 
 function evalNextCell(cell) {
   if (cell.next !== '' && cell.editor.getValue().trim() !== '') {
-    Cells[cell.next].eval().then((cell) => {
-      evalNextCell(cell);
-    });
+    if (Cells[cell.next]) {
+      Cells[cell.next].eval().then((cell) => {
+        evalNextCell(cell);
+      });
+    } else {
+      setTimeout(evalNextCell, 100, cell);
+    }
   }
 }
 
@@ -96,7 +100,7 @@ function adjustScroll(cell) {
 }
 
 function swapToNextCell() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     let cell = Cells[CurrentCell];
     if (cell.next !== '') {
       let nextCell = Cells[cell.next];
@@ -108,7 +112,7 @@ function swapToNextCell() {
 }
 
 function swapToPrevCell() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     let cell = Cells[CurrentCell];
     if (cell.prev !== '') {
       let prevCell = Cells[cell.prev];
@@ -120,7 +124,7 @@ function swapToPrevCell() {
 }
 
 function removeCurrent() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     let cell = Cells[CurrentCell];
     let prev = cell.prev;
     let next = cell.next;
@@ -137,7 +141,7 @@ function removeCurrent() {
 }
 
 function focusNextCell() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     let cell = Cells[CurrentCell];
     if (cell.next) {
       let nextCell = Cells[cell.next];
@@ -147,7 +151,7 @@ function focusNextCell() {
   }
 }
 function focusPrevCell() {
-  if (CurrentCell) {
+  if (Cells[CurrentCell]) {
     let cell = Cells[CurrentCell];
     if (cell.prev) {
       let prevCell = Cells[cell.prev];
