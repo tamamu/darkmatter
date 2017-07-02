@@ -94,7 +94,7 @@ div.cell table * {
 div.cell {
   color: black;
   margin: 1em auto;
-  width: 80vw;
+  max-width: 80vw;
   box-shadow: 10px 10px rgba(0,0,0,0.2);
 }
 

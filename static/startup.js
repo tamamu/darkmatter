@@ -4,6 +4,8 @@ let Loaded = false;
 
 
 window.onload = () => {
+  let symbolManager = new SymbolManager(document.getElementById('symbols'));
+  Socket.attachSymbolManager(symbolManager);
   let container = document.getElementById('dm-container');
   let renderer = new Renderer();
   let lispRenderer = new LispRenderer(Socket);
@@ -49,6 +51,9 @@ function initCellAll(renderer) {
   setTimeout(progress, 100, progress);
   if (LAZY_LOAD) {
     for (let i = 0; i < elements.length; i++) {
+      if (i > 0 && !elements[i].dataset.prev) {
+        elements[i].dataset.prev = elements[i-1].id;
+      }
       let id = elements[i].id;
       setTimeout(initCell, delay*i, id, renderer);
     }

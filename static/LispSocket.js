@@ -13,6 +13,7 @@ class LispSocket {
     this.socket = null;
     this.parser = null;
     this.filepath = filepath;
+    this.updateSymbols = (symbols) => {};
   }
 
   static generateInterval(k) {
@@ -23,6 +24,10 @@ class LispSocket {
     }
 
     return Math.random() * maxInterval;
+  }
+
+  attachSymbolManager(sm) {
+    this.updateSymbols = sm.updateSymbols.bind(sm);
   }
 
   attachParser(parser) {
@@ -79,6 +84,7 @@ class LispSocket {
         let parser = this.parser;
         let onMessage = (json) => {
           let mes = json.message;
+          this.updateSymbols(json.symbols);
           if (mes === 'alert_start') {
             let id = json['id'];
             if (Alerts[cellId] && Alerts[cellId].exited === false) {

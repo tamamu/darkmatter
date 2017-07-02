@@ -13,6 +13,11 @@ function attachCloseFunction() {
   }
 }
 
+function toggleDrawer() {
+  let drawer = document.getElementById('drawer');
+  drawer.classList.toggle('show');
+}
+
 function saveFile() {
   Socket.save(document.getElementsByClassName('cell'));
 }

@@ -67,6 +67,32 @@
 (defmacro get-package (path)
   `(gethash ,path *local-packages*))
 
+(defmacro farguments (symbol)
+  `(third (function-lambda-expression (symbol-function ,symbol))))
+
+(defmacro marguments (symbol)
+  `(third (car (last (function-lambda-expression (macro-function ,symbol))))))
+
+(defun symbol-detail (symbol)
+  (let ((name (symbol-name symbol)))
+    (cond
+      ((macro-function symbol)
+       `(:obj ("type" . "macro")
+              ("doc" . ,(documentation symbol 'function))
+              ("arguments" . ,(marguments symbol))))
+      ((fboundp symbol)
+       `(:obj ("type" . "function")
+              ("doc" . ,(documentation symbol 'function))
+              ("arguments" . ,(farguments symbol))))
+      ((find-class symbol nil)
+       `(:obj ("type" . "class")
+              ("doc" . ,(documentation symbol 'type))))
+      ((boundp symbol)
+       `(:obj ("type" . "variable")
+              ("doc" . ,(documentation symbol 'variable))))
+      (t
+       `(:obj ("type" . "symbol"))))))
+
 ;;; (<package> . "package-name")
 (defun make-temporary-package (path)
   (print (directory-namestring path))
@@ -107,6 +133,7 @@
          ($<error-output> "")
          ($<standard-output> "")
          (sexp nil)
+         (symbols `(:obj))
          (return-value nil)
          (pos 0))
     (handler-case
@@ -114,7 +141,13 @@
             do (multiple-value-setq (sexp pos)
                  (read-from-string src :eof-error-p t :start pos))
                (setf sexp (attach-runtask sexp))
-               (setf return-value (eval sexp)))
+               (setf return-value (eval sexp))
+               (when (symbolp return-value)
+                 (setf symbols
+                       (append symbols
+                               (list
+                                (cons (symbol-name return-value)
+                                      (symbol-detail return-value)))))))
       (END-OF-FILE (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
     (setf $<error-output> (get-output-stream-string *error-output*))
@@ -123,10 +156,13 @@
     (in-package :darkmatter)
     (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
     (if-let (task (check-task cell id return-value))
-            task
+            (progn
+              (setf (jsown:val task "symbols") symbols)
+              task)
             `(:obj ("message" . "result")
                    ("return" .
                     ,(escape-string (format nil "~A" return-value)))
+                   ("symbols" . ,symbols)
                    ("output" .
                     ,(format nil "~A~A"
                        (if (string= "" $<error-output>)

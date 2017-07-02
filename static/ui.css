@@ -7,6 +7,7 @@ body {
   height: 100vh;
   background-color: #263238;
   color: #f6f2f8;
+  overflow: hidden;
 }
 table, td, th {
   border: 1px black solid;
@@ -136,7 +137,58 @@ g.tick {
 line {
   stroke: #ececec;
 }
+.contents {
+  display: flex;
+  overflow-x:hidden;
+  width: 100vw;
+}
 #drawer {
+  width: 0;
+  transition: width linear .1s;
+}
+#drawer.show {
+  width: 15em;
+  transition: width linear .1s;
+}
+#dm-container {
+  width: 100vw;
+}
+
+#symbols {
+  display: flex;
+  height: 100%;
+  overflow-y: scroll;
+  flex-direction: column;
+}
+
+#symbols ul {
+  width: 100%;
+  padding: 0;
+  list-style: none;
+}
+
+#symbols ul li {
+  margin: 0;
+  padding-left: 1em;
+}
+
+#symbols ul li ul li {
+  border-left: 2px solid white;
+}
+
+#symbols ul li ul li label {
+  display: block;
+}
+
+#symbols ul li ul li div {
   display: none;
 }
 
+#symbols ul li ul li input[type="checkbox"]:checked + div {
+  display: initial;
+}
+
+#symbols ul li ul li div p {
+  margin: 0;
+  font-style: italic;
+}
