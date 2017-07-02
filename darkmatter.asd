@@ -13,7 +13,7 @@
 (in-package :darkmatter-asd)
 
 (defsystem darkmatter
-  :version "0.2.0"
+  :version "0.3.0"
   :author "Eddie"
   :license "MIT"
   :depends-on (:clack
