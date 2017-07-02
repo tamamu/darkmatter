@@ -27,9 +27,11 @@ $ ros install tamamu/darkmatter
 
 ## Usage
 
+The path starts from current directory.
+
 ```
 $ darkm
-# Open localhost:8888//path/to/file.lisp in your browser!
+# Open localhost:8888/browse/path/to/file.lisp in your browser!
 ```
 
 ## Author
