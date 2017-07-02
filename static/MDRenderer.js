@@ -30,7 +30,7 @@ class MDRenderer {
     let originalLink = this.marked.link.bind(this.marked);
     let get_uri = (href) => {
       if (href.startsWith('/')) {
-        return `${HTTP_URI}/${href}`;
+        return `${HTTP_URI}/browse${href}`;
       } else if (href.startsWith('http://')) {
         return href;
       } else {

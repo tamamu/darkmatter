@@ -207,15 +207,15 @@
   (let ((fp (probe-file path)))
     (if (string= "LISP" (string-upcase (pathname-type path)))
       (if fp
-          (get-editable-file path env)
-          (new-editable-file path env))
+          (get-editable-file env path)
+          (new-editable-file env path))
       (if fp
         (if (pathname-name fp)
             (read-file env path)
             (notfound env)) ;; Open directory
         (notfound env)))))
 
-(defun new-editable-file (path env)
+(defun new-editable-file (env path)
   (make-temporary-package path)
   `(200 (:content-type "text/html")
     (,(render-template* +base.html+ nil
@@ -225,7 +225,7 @@
                         :path path
                         :token (write-to-string (get-universal-time))))))
 
-(defun get-editable-file (path env)
+(defun get-editable-file (env path)
   (make-temporary-package path)
   (with-open-file (in path :direction :input)
     (let ((editcells (read in)))
@@ -303,11 +303,16 @@
     (if (string= "/" uri)
         (serve-index)
         (let ((path (subseq uri 1)))
-          (if-let (data (read-global-file env path))
-                  data
-                  (if (string= "LISP" (string-upcase (pathname-type path)))
-                      (get-editable-file path env)
-                      (notfound env)))))))
+          (multiple-value-bind (browse-p path)
+            (starts-with-subseq "browse/" path :return-suffix t)
+            (if (and browse-p
+                     (not (starts-with-subseq "/" path)))
+                (if-let (data (read-global-file env path))
+                        data
+                        (if (string= "LISP" (string-upcase (pathname-type path)))
+                            (get-editable-file env path)
+                            (notfound env)))
+                (notfound env)))))))
 
 (defun handle-put (env)
   (let ((input (flexi-streams:make-flexi-stream
