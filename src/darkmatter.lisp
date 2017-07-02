@@ -103,7 +103,9 @@
                                     :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
             (eval `(in-package ,(package-name pkg)))
             (setf (symbol-value (ensure-symbol :*current-directory* pkg))
-                  (pathname (directory-namestring path)))
+                  (pathname
+                    (directory-namestring
+                      (merge-pathnames *default-pathname-defaults* path))))
             (in-package :darkmatter)
             (use-package pkg 'darkmatter)
             (setf (gethash path *local-packages*)
