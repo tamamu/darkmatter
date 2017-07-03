@@ -40,17 +40,20 @@ function initCell(id, renderer) {
   let instance = Cell.fromElement(element);
   instance.attachRenderer(renderer);
   Cells[id] = instance;
+  return instance;
 }
 
 function initCellAll(renderer) {
   return new Promise((resolve, reject) => {
   let elements = document.getElementsByClassName('cell');
-  let prev = null;
   let delay = 50;
   let progress = loadCellsProgress(elements.length, console.log, resolve);
+  if (elements.length > 0) {
+    initCell(elements[0].id, renderer).editor.focus();
+  }
   setTimeout(progress, 100, progress);
   if (LAZY_LOAD) {
-    for (let i = 0; i < elements.length; i++) {
+    for (let i = 1; i < elements.length; i++) {
       if (i > 0 && !elements[i].dataset.prev) {
         elements[i].dataset.prev = elements[i-1].id;
       }
@@ -58,18 +61,17 @@ function initCellAll(renderer) {
       setTimeout(initCell, delay*i, id, renderer);
     }
   } else {
-    for (let i = 0; i < elements.length; i++) {
-      let cell = elements[i];
-      let instance = Cell.fromElement(cell);
-      instance.attachRenderer(renderer);
-      if (prev && instance.prev === '') {
-        instance.element.dataset.prev = prev.id;
+    let prev = null;
+    for (let i = 1; i < elements.length; i++) {
+      let cell = initCell(elements[i].id, renderer);
+      if (prev && cell.prev === '') {
+        cell.element.dataset.prev = prev.id;
       }
-      if (instance.next === '' && i < elements.length-1) {
-        instance.element.dataset.next = elements[i+1].id;
+      if (cell.next === '' && i < elements.length-1) {
+        cell.element.dataset.next = elements[i+1].id;
       }
-      Cells[cell.id] = instance;
-      prev = instance;
+      Cells[cell.id] = cell;
+      prev = cell;
     }
   }
   });
@@ -92,5 +94,6 @@ function appendLastCell(renderer, container) {
     let instance = Cell.createElement(Date.now().toString());
     instance.attachRenderer(renderer);
     container.appendChild(instance.element);
+    instance.editor.focus();
   }
 }
