@@ -42,7 +42,7 @@ $ darkm
 ;; The path where the file exists
 
 (enable-infix-syntax)
-;; #f((9 + 8 * 2) / 5)
+;; #f(#f(9 + 8 * 2) / 5)
 
 (runtask init-form &body body)
 ;; Run asynchronous alertable task.
