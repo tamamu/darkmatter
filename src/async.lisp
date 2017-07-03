@@ -86,28 +86,20 @@
              (set-task-output $<id> $<result>)
              (set-task-exit $<id>)))))))
 
-(defun replace-all (src dest form)
-  (if (listp form)
-    (mapcar
-      (lambda (obj)
-        (if (listp obj)
-            (replace-all src dest obj)
-            (if (and (symbolp obj)
-                     (equalp (symbol-name obj)
-                             (symbol-name src)))
-                dest
-                obj)))
-          form)
-    form))
+(defun symbol= (a b)
+  (and (symbolp a)
+       (symbolp b)
+       (string= (symbol-name a)
+                (symbol-name b))))
 
 (defun attach-runtask (form)
-  (replace-all 'runtask 'runtask form))
+  (subst 'runtask 'runtask form :test #'symbol=))
 
 (defun attach-checkpoint (form)
-  (replace-all 'checkpoint 'checkpoint form))
+  (subst 'checkpoint 'checkpoint form :test #'symbol=))
 
 (defun attach-id (id form)
-  (replace-all 'id-form id form))
+  (subst id 'id-form form :test #'symbol=))
 
 (defun send-recv (ws id)
   "Alert to client that has the id"
