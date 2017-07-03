@@ -30,8 +30,27 @@ $ ros install tamamu/darkmatter
 The path starts from current directory.
 
 ```
+$ cd ~/path/to/root-directory
 $ darkm
-# Open localhost:8888/browse/path/to/file.lisp in your browser!
+# Open localhost:8888/browse/file.lisp in your browser!
+```
+
+## Symbols
+
+```
+*current-directory*
+;; The path where the file exists
+
+(enable-infix-syntax)
+;; #f((9 + 8 * 2) / 5)
+
+(runtask init-form &body body)
+;; Run asynchronous alertable task.
+;; The result of body will be alerted finally.
+
+  (checkpoint tmp-form kill-form)
+  ;; You can use this form only in runtask.
+  ;; If the task should kill, then kill-form will be alerted; otherwise tmp-form will be alerted.
 ```
 
 ## Author
