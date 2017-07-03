@@ -7,6 +7,18 @@
  *
  * */
 
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+*::-webkit-scrollbar-track {
+  background: #073642;
+}
+*::-webkit-scrollbar-thumb {
+  background: #586e75;
+  border-radius: 4px;
+}
 body {
   display: flex;
   flex-direction: column;
@@ -59,7 +71,7 @@ nav ul {
   -moz-user-select: none;
   -webkit-user-select: none;
   user-select: none;
-
+  cursor: default;
 }
 nav ul#menubar li {
   font-size: 13px;
@@ -67,11 +79,11 @@ nav ul#menubar li {
   height: 2em;
   text-align: center;
   transition: background-color .1s;
-  border: 1px solid #00000000;
+  border: 1px solid rgba(255, 255, 255, 0);
 }
 nav ul#menubar li:hover {
   background-color: #586e75;
-  border: 1px solid #ffffff33;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 nav ul#menubar li label {
   display: flex;

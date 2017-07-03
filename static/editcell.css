@@ -1,8 +1,8 @@
 /*
  * container: #002b36
  * cellbar  : #284a56
- * oneval   : #ffffff33
- * onsuccess: #ffffff99
+ * oneval   : #cb4b16
+ * onsuccess: #859900
  * border   : #eee8d5
  * output   : #073642
  * result   : #284a56
@@ -67,7 +67,7 @@ div.cell:before {
   font-weight: bold;
   color: #eee8d5;
   background-color: #284a56;
-  border: 1px solid #ffffff33;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
 }
 div.cell.oneval:before {
@@ -139,5 +139,5 @@ div.cell div#output div#result {
 }
 
 div.cell div.ace_focus {
-  box-shadow: 0px 0px 2px 1px #2aa19899;
+  box-shadow: 0px 0px 2px 1px rgba(42, 225, 216, 0.7);
 }
