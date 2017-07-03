@@ -56,7 +56,26 @@ header p#alert {
   font-size: 12px;
   overflow: hidden;
   margin-left: auto;
-  margin-top: auto;
+  margin-top: 32px;
+  transform: translateX(120%);
+  padding: 1em;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 4px 4px 4px 4px rgba(0, 0, 0, 0.1);
+  visibility: hidden;
+}
+header p#alert.show {
+  animation-name: show-alert;
+  animation-direction: alternate;
+  animation-timing-function: linear;
+  animation-duration: 3s;
+  animation-fill-mode: both;
+  visibility: visible;
+}
+header p#alert.save {
+  background-color: #b58900;
+}
+header p#alert.recall {
+  background-color: #2aa198;
 }
 nav {
   display: flex;
@@ -64,6 +83,7 @@ nav {
   max-height: 2em;
   min-height: 2em;
   align-items: center;
+  border-bottom: 1px solid #586e75;
 }
 nav ul {
   display: flex;
@@ -104,6 +124,7 @@ ul.submenu {
   visibility: hidden;
   width: 18em;
   background-color: #073642;
+  border: 1px solid #586e75;
   text-align: left;
   padding: 0;
 }
@@ -178,6 +199,7 @@ line {
   width: 0;
   overflow: hidden;
   transition: width linear .1s;
+  border-right: 1px solid #586e75;
 }
 #drawer.show {
   width: 15em;
@@ -225,4 +247,19 @@ line {
 #symbols ul li ul li div p {
   margin: 0;
   font-style: italic;
+}
+
+@keyframes show-alert {
+  0% {
+    transform: translateX(120%);
+  }
+  10% {
+    transform: translateX(0);
+  }
+  90% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(120%);
+  }
 }

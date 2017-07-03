@@ -21,6 +21,20 @@ function attachCloseFunction() {
   }
 }
 
+function showAlert(text, type = '') {
+  let indicator = document.getElementById('alert');
+  indicator.innerHTML = text;
+  indicator.className = '';
+  setTimeout(() => {
+    indicator.classList.add('show');
+    indicator.classList.add(type);
+    indicator.onanimationend = () => {
+      indicator.classList.remove('show');
+      indicator.classList.remove(type);
+    }
+  }, 1);
+}
+
 function toggleDrawer() {
   let drawer = document.getElementById('drawer');
   drawer.classList.toggle('show');

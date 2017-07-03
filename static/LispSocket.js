@@ -14,6 +14,7 @@ class LispSocket {
     this.parser = null;
     this.filepath = filepath;
     this.updateSymbols = (symbols) => {};
+    this.showAlert = (text) => {console.log(text);};
   }
 
   static generateInterval(k) {
@@ -24,6 +25,10 @@ class LispSocket {
     }
 
     return Math.random() * maxInterval;
+  }
+
+  attachAlert(sa) {
+    this.showAlert = sa;
   }
 
   attachSymbolManager(sm) {
@@ -132,10 +137,8 @@ class LispSocket {
         data.push(d);
       }
       let onmessage = (json) => {
-        //let json = JSON.parse(message);
-        console.log(`Result:${json['return']}`);
-        let show = document.getElementById('alert');
-        show.innerText = `Saved: ${json['return']} (${(new Date()).toString()})`;
+        console.log(`Result:${json.return}`);
+        this.showAlert(`Saved: ${json.return} (${(new Date()).toString()})`, 'save');
         Modified = false;
       };
       let sender = JSON.stringify({
@@ -153,9 +156,7 @@ class LispSocket {
 
   recall() {
     let onmessage = (json) => {
-      //let json = JSON.parse(message);
-      let show = document.getElementById('alert');
-      show.innerText = `Recall: new package created at ${(new Date()).toString()})`;
+      this.showAlert(`Recall: new package created at ${(new Date()).toString()})`, 'recall');
     }
     let sender = JSON.stringify({
       "message": "recall",

@@ -6,6 +6,7 @@ let Loaded = false;
 window.onload = () => {
   let symbolManager = new SymbolManager(document.getElementById('symbols'));
   Socket.attachSymbolManager(symbolManager);
+  Socket.attachAlert(showAlert);
   let container = document.getElementById('dm-container');
   let renderer = new Renderer();
   let lispRenderer = new LispRenderer(Socket);

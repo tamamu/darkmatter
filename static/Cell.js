@@ -34,6 +34,7 @@ class Cell {
   }
 
   eval() {
+    Modified = true;
     this.element.classList.remove('success');
     this.element.classList.add('oneval');
     if (this.renderer) {
