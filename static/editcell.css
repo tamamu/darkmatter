@@ -1,6 +1,18 @@
+/*
+ * container: #002b36
+ * cellbar  : #284a56
+ * oneval   : #ffffff33
+ * onsuccess: #ffffff99
+ * border   : #eee8d5
+ * output   : #073642
+ * result   : #284a56
+ * font     : white
+ *
+ * */
+
 #dm-container {
   flex: 1;
-  background-color: #455A64;
+  background-color: #002b36;
   overflow-y: scroll;
 }
 
@@ -52,27 +64,26 @@ div.cell div#output span.katex-block {
 
 div.cell:before {
   font-size: 10px;
-  background-color: #757575;
+  font-weight: bold;
+  color: #eee8d5;
+  background-color: #284a56;
+  border: 1px solid #ffffff33;
   display: flex;
 }
 div.cell.oneval:before {
-  background-color: #99bbcc;
+  background-color: #cb4b16;
 }
 div.cell.success:before {
-  background-color: #65b970;
+  background-color: #859900;
 }
 div.cell[data-lang="lisp"]:before {
-  color: white;
-  font-weight: bold;
   content: 'Common Lisp';
 }
 div.cell[data-lang="md"]:before {
-  color: white;
-  font-weight: bold;
   content: 'Markdown';
 }
 div.cell div#output hr {
-  border: 1px solid #ececec;
+  border: 1px solid #eee8d5;
   width: 95%;
 }
 div.cell[data-lang="md"] div#output {
@@ -83,19 +94,19 @@ div.cell[data-lang="md"] div#output.slide {
   overflow-y: hidden;
 }
 div.cell table {
-  border-color: #ececec;
+  border-color: #eee8d5;
   border-collapse: collapse;
   border-spacing: 0;
 }
 div.cell table * {
-  border-color: #ececec;
+  border-color: #eee8d5;
 }
 
 div.cell {
   color: black;
   margin: 1em auto;
   max-width: 80vw;
-  box-shadow: 10px 10px rgba(0,0,0,0.2);
+  box-shadow: 5px 5px 5px 5px rgba(0,0,0,0.2);
 }
 
 div.cell div.cache {
@@ -108,8 +119,8 @@ div.cell div#editor {
 
 div.cell div#output {
   display: none;
-  color: #ececec;
-  background-color: #424242;
+  color: #eee8d5;
+  background-color: #073642;
   min-height: 5em;
   overflow-y: scroll;
   max-height: 450px;
@@ -122,11 +133,11 @@ div.cell div#output.show {
 
 div.cell div#output div#result {
   width: 100%;
-  background-color: #616161;
-  color: #ececec;
+  background-color: #284a56;
+  color: #eee8d5;
   font-weight: bold;
 }
 
 div.cell div.ace_focus {
-  box-shadow: 0px 0px 2px 1px rgba(100, 255, 100, 0.5);
+  box-shadow: 0px 0px 2px 1px #2aa19899;
 }

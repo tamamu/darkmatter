@@ -58,7 +58,7 @@ class Cell {
 
   static createEditor(elm, lang = 'lisp') {
     let editor = ace.edit(elm);
-    editor.setTheme('ace/theme/monokai');
+    editor.setTheme('ace/theme/solarized_dark');
     editor.setOptions({maxLines: Infinity, tabSize: 2});
     editor.setFontSize(14);
     editor.$blockScrolling = Infinity;

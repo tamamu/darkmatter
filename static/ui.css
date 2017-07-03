@@ -1,3 +1,12 @@
+/*
+ * background: #073642
+ * foreground: #eee8d5
+ * selected:   #586e75
+ * border: #eee8d5
+ * stroke: #eee8d5
+ *
+ * */
+
 body {
   display: flex;
   flex-direction: column;
@@ -5,12 +14,12 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #263238;
-  color: #f6f2f8;
+  background-color: #073642;
+  color: #eee8d5;
   overflow: hidden;
 }
 table, td, th {
-  border: 1px black solid;
+  border: 1px #eee8d5 solid;
 }
 h1, h2, h3, h4, h5, h6 {
   margin: 0.5em 0;
@@ -20,6 +29,7 @@ p {
 }
 header {
   display: flex;
+  max-height: 2em;
   min-height: 2em;
   flex-direction: row;
   padding: 0 1em;
@@ -38,6 +48,7 @@ header p#alert {
 nav {
   display: flex;
   flex-direction: row;
+  max-height: 2em;
   min-height: 2em;
   align-items: center;
 }
@@ -45,6 +56,10 @@ nav ul {
   display: flex;
   align-items: center;
   list-style: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+
 }
 nav ul#menubar li {
   font-size: 13px;
@@ -52,9 +67,11 @@ nav ul#menubar li {
   height: 2em;
   text-align: center;
   transition: background-color .1s;
+  border: 1px solid #00000000;
 }
 nav ul#menubar li:hover {
-  background-color: #37474F;
+  background-color: #586e75;
+  border: 1px solid #ffffff33;
 }
 nav ul#menubar li label {
   display: flex;
@@ -72,7 +89,7 @@ ul.submenu {
   z-index: 100;
   visibility: hidden;
   width: 18em;
-  background-color: #263238;
+  background-color: #073642;
   text-align: left;
   padding: 0;
 }
@@ -89,7 +106,6 @@ ul.submenu li.keybind:after {
 nav ul#menubar li ul.submenu li {
   width: 100%;
   text-align: left;
-  padding-left: 1em;
 }
 ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
   visibility: visible;
@@ -130,16 +146,17 @@ ul#menubar li input[type="checkbox"]:checked + label + ul.submenu {
   right: 0;
 }
 path.domain {
-  stroke: #ececec;
+  stroke: #eee8d5;
 }
 g.tick {
-  stroke: #ececec;
+  stroke: #eee8d5;
 }
 line {
-  stroke: #ececec;
+  stroke: #eee8d5;
 }
 .contents {
   display: flex;
+  flex: 1;
   overflow-x:hidden;
   width: 100vw;
 }
