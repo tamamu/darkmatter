@@ -119,7 +119,7 @@ div.cell div#editor {
 
 div.cell div#output {
   display: none;
-  color: #eee8d5;
+  color: #93a1a1;
   background-color: #073642;
   min-height: 5em;
   overflow-y: scroll;
@@ -134,7 +134,7 @@ div.cell div#output.show {
 div.cell div#output div#result {
   width: 100%;
   background-color: #284a56;
-  color: #eee8d5;
+  color: #93a1a1;
   font-weight: bold;
 }
 
