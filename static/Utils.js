@@ -1,12 +1,20 @@
 
-function closeAllSubMenu() {
+function closeAllSubMenu(id = null) {
   let submenus = document.getElementsByName('menuitem');
   for (let check of submenus) {
-    check.checked = false;
+    if (check.id !== id) {
+      check.checked = false;
+    }
   }
 }
 
 function attachCloseFunction() {
+  let inputs = document.querySelectorAll('#menubar li input');
+  for (let input of inputs) {
+    input.onchange = () => {
+      closeAllSubMenu(input.id);
+    };
+  }
   let menuitems = document.querySelectorAll('.submenu li');
   for (let item of menuitems) {
     item.addEventListener('click', closeAllSubMenu);
