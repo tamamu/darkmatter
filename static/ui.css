@@ -20,6 +20,7 @@ p {
 }
 header {
   display: flex;
+  min-height: 2em;
   flex-direction: row;
   padding: 0 1em;
   align-items: center;
@@ -37,7 +38,7 @@ header p#alert {
 nav {
   display: flex;
   flex-direction: row;
-  height: 2em;
+  min-height: 2em;
   align-items: center;
 }
 nav ul {
@@ -144,6 +145,7 @@ line {
 }
 #drawer {
   width: 0;
+  overflow: hidden;
   transition: width linear .1s;
 }
 #drawer.show {
@@ -157,6 +159,7 @@ line {
 #symbols {
   display: flex;
   height: 100%;
+  width: 15em;
   overflow-y: scroll;
   flex-direction: column;
 }
