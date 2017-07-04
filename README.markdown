@@ -53,6 +53,13 @@ $ darkm
   ;; If the task should kill, then kill-form will be alerted; otherwise tmp-form will be alerted.
 ```
 
+## See Also
+
+* [Ace](https://github.com/ajaxorg/ace) - The High Performance Code Editor for the Web
+* [marked](https://github.com/chjj/marked) - A markdown parser and compiler.
+* [KaTeX](https://github.com/Khan/KaTeX) - Fast math typesetting for the web.
+* [d3](https://github.com/d3/d3) - Bring data to life with SVG, Canvas and HTML.
+
 ## Author
 
 * Eddie (tamamu.1r1s@gmail.com)
