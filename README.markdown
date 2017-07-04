@@ -55,10 +55,11 @@ $ darkm
 
 ## See Also
 
+* [Clack](https://github.com/fukamachi/clack) - Web application environment for Common Lisp
 * [Ace](https://github.com/ajaxorg/ace) - The High Performance Code Editor for the Web
-* [marked](https://github.com/chjj/marked) - A markdown parser and compiler.
-* [KaTeX](https://github.com/Khan/KaTeX) - Fast math typesetting for the web.
-* [d3](https://github.com/d3/d3) - Bring data to life with SVG, Canvas and HTML.
+* [marked](https://github.com/chjj/marked) - A markdown parser and compiler
+* [KaTeX](https://github.com/Khan/KaTeX) - Fast math typesetting for the web
+* [d3](https://github.com/d3/d3) - Data visualizing library for the web
 
 ## Author
 
