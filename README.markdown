@@ -53,6 +53,13 @@ $ darkm
   ;; If the task should kill, then kill-form will be alerted; otherwise tmp-form will be alerted.
 ```
 
+## How To Make Plugin
+
+You can regist plugin with config file ($HOME/.darkmatter.conf) to add plugin file paths.  
+See [example](https://github.com/tamamu/darkmatter/blob/master/darkmatter.conf.example).
+
+See also plugin example, [plot.lisp](https://github.com/tamamu/darkmatter/blob/master/src/plot.lisp) and [LispPlot.js](https://github.com/tamamu/darkmatter/blob/master/static/LispPlot.js).
+
 ## See Also
 
 * [Clack](https://github.com/fukamachi/clack) - Web application environment for Common Lisp
