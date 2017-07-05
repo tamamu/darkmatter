@@ -112,7 +112,9 @@
                   (starts-with-subseq "plugin/" path :return-suffix t)
                   (format t "~A:~A~%" plugin-p plugin-path)
                   (if plugin-p
-                      (get-plugin env plugin-path)
+                      (if-let (plugin (get-plugin env plugin-path))
+                              plugin
+                              (notfound env))
                       (notfound env)))))))))
 
 (defun handle-put (env)
