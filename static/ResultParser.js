@@ -90,6 +90,14 @@ class ResultParser {
     return [res, idx];
   }
 
+  static plistToObject(plist) {
+    let obj = {};
+  	for (let i=0; i < plist.length; i+=2) {
+			obj[plist[i]] = plist[i+1];
+		}
+    return obj;
+  }
+
   static parseSharp(src, idx) {
     let acc = "";
     let res = {mark: null, children: []};
@@ -97,9 +105,25 @@ class ResultParser {
     for (; src.length > idx; idx++) {
       switch (src[idx]) {
         case '(':
-          res.mark = '#'+acc;
-          [res.children, idx] = ResultParser.parseList(src, idx+1);
-          return [res, idx];
+          if (acc === '') {
+            return ResultParser.parseList(src, idx+1);
+          } else if (acc === '2A') {
+            let inner; [inner, idx] = ResultParser.parseList(src, idx+1);
+            res = {$type: '$<MATRIX>', data: inner, dim: [inner.length, inner[0].length]};
+            return [res, idx];
+          } else if (acc === 'S') {
+            let inner; [inner, idx] = ResultParser.parseList(src, idx+1);
+            let data = ResultParser.plistToObject(inner.slice(1));
+            res = {$type: inner[0]};
+            for (let key in data) {
+              res[key] = data[key];
+            }
+            return [res, idx];
+          } else {
+            res.mark = '#'+acc;
+            [res.children, idx] = ResultParser.parseList(src, idx+1);
+            return [res, idx];
+          }
           break;
         default:
           if (src[idx].match(WhiteSpaceExp)) {
