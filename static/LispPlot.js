@@ -40,6 +40,7 @@ function plotLine(obj) {
 
 function plotScatter(obj) {
   let vec = obj[":DATA"];
+  if (vec.$type === '$<MATRIX>') vec = vec.data;
   let container = document.createElement('div');
   let x = d3.scaleLinear()
             .domain([0, d3.max(vec, d => d[0])])

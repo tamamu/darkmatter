@@ -27,12 +27,11 @@
   :components ((:module "src"
                 :components
                 ((:file "darkmatter" :depends-on ("serve" "async" "eval" "pacman" "save"))
-                 (:file "serve" :depends-on ("pacman" "plugman" "user"))
+                 (:file "serve" :depends-on ("pacman" "user"))
                  (:file "eval" :depends-on ("async" "pacman"))
                  (:file "pacman" :depends-on ("infix" "suite"))
-                 (:file "settings" :depends-on ("serve" "plugman" "user"))
+                 (:file "settings" :depends-on ("serve" "user"))
                  (:file "user")
-                 (:file "plugman")
                  (:file "save" )
                  (:file "async")
                  (:file "infix")

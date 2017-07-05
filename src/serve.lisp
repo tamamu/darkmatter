@@ -13,7 +13,7 @@
                 :starts-with-subseq)
   (:import-from :darkmatter.pacman
                 :make-temporary-package)
-  (:import-from :darkmatter.plugman
+  (:import-from :darkmatter-user
                 :*plugin-handler*
                 :*plugin-scripts*)
   (:export :*static-directory*
@@ -82,18 +82,14 @@
         (notfound env)))))
 
 (defun get-plugin (env path)
-  (print *plugin-handler*)
-  (format t "GET plugin ~A~%" path)
   (with-hash-table-iterator (generator-fn *plugin-handler*)
     (loop
       (multiple-value-bind (more? key handler) (generator-fn)
         (unless more? (return))
-        (multiple-value-bind (match? path)
-          (starts-with-subseq key path)
-          (when (and match?
-                     (member key darkmatter-user:*use-plugin-list* :test #'equalp))
-              (return (funcall handler env path))))))))
-
+        (multiple-value-bind (match? plugin-path)
+          (starts-with-subseq key path :return-suffix t)
+          (when match?
+            (return (funcall handler env plugin-path))))))))
 
 
 (defun notfound (env)

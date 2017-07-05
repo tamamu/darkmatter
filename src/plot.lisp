@@ -1,9 +1,6 @@
 (in-package :darkmatter-user)
 (defpackage darkmatter.plot
-  (:use :cl :darkmatter.plugman)
-  (:import-from :darkmatter.serve
-                :*static-directory*
-                :read-file)
+  (:use :cl :darkmatter.serve :darkmatter-user)
   (:export scatter
            make-scatter
            line

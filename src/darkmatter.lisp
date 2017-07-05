@@ -109,7 +109,6 @@
                             (notfound env)))
                 (multiple-value-bind (plugin-p plugin-path)
                   (starts-with-subseq "plugin/" path :return-suffix t)
-                  (format t "~A:~A~%" plugin-p plugin-path)
                   (if plugin-p
                       (if-let (plugin (get-plugin env plugin-path))
                               plugin
