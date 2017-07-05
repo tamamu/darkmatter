@@ -4,9 +4,6 @@
   (:import-from :darkmatter.serve
                 :*static-directory*
                 :read-file)
-;  (:import-from :darkmatter.plugman
-;                :regist-plugin-handler
-;                :regist-plugin-script)
   (:export scatter
            make-scatter
            line
