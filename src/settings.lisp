@@ -5,7 +5,7 @@
 (in-package :darkmatter.settings)
 
 (defparameter *plugin-lisp*
-  (list (merge-pathnames "src/plot.lisp" *default-pathname-defaults*)))
+  (list (asdf:system-relative-pathname :darkmatter "src/plot.lisp")))
 
 (let ((path (merge-pathnames ".darkmatter.conf" (user-homedir-pathname))))
   (if (probe-file path)
