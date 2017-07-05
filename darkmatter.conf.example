@@ -1,0 +1,10 @@
+;; -*- mode:lisp -*-
+
+;; Copy to $HOME/.darkmatter.conf
+
+(in-package :darkmatter.settings)
+
+(setf *plugin-lisp*
+  (append *plugin-lisp*
+    (list "/path/to/your-plugin.lisp")))
+
