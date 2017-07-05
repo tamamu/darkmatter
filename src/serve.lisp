@@ -14,8 +14,10 @@
   (:import-from :darkmatter.pacman
                 :make-temporary-package)
   (:import-from :darkmatter.plugman
+                :*plugin-handler*
                 :*plugin-scripts*)
-  (:export :read-file
+  (:export :*static-directory*
+           :read-file
            :serve-index
            :read-global-file
            :get-editable-file
@@ -27,8 +29,6 @@
 
 (djula:add-template-directory (asdf:system-relative-pathname "darkmatter" "templates/"))
 (defparameter +base.html+ (djula:compile-template* "base.html"))
-
-
 
 (defun read-file (env path)
   (format t "read: ~A~%" path)
@@ -80,6 +80,20 @@
                               :plugins *plugin-scripts*
                               :token (write-to-string (get-universal-time)))))
         (notfound env)))))
+
+(defun get-plugin (env path)
+  (print *plugin-handler*)
+  (format t "GET plugin ~A~%" path)
+  (with-hash-table-iterator (generator-fn *plugin-handler*)
+    (loop
+      (multiple-value-bind (more? key handler) (generator-fn)
+        (unless more? (return))
+        (multiple-value-bind (match? path)
+          (starts-with-subseq key path)
+          (when (and match?
+                     (member key darkmatter-user:*use-plugin-list* :test #'equalp))
+              (return (funcall handler env path))))))))
+
 
 
 (defun notfound (env)

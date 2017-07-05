@@ -1,6 +1,12 @@
-(in-package :cl-user)
+(in-package :darkmatter-user)
 (defpackage darkmatter.plot
-  (:use :cl)
+  (:use :cl :darkmatter.plugman)
+  (:import-from :darkmatter.serve
+                :*static-directory*
+                :read-file)
+;  (:import-from :darkmatter.plugman
+;                :regist-plugin-handler
+;                :regist-plugin-script)
   (:export scatter
            make-scatter
            line
@@ -14,4 +20,8 @@
 (defstruct line
   (data #() :type array))
 
+(defun handle (env path)
+  (read-file env (merge-pathnames *static-directory* "LispPlot.js")))
 
+(regist-plugin-handler "plot" #'handle)
+(regist-plugin-script "plot" "LispPlot.js")

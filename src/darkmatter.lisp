@@ -20,6 +20,7 @@
                 :read-global-file
                 :serve-index
                 :get-editable-file
+                :get-plugin
                 :notfound)
   (:import-from :darkmatter.eval
                 :eval-string)
@@ -27,8 +28,6 @@
                 :recall-package)
   (:import-from :darkmatter.save
                 :save-file)
-  (:import-from :darkmatter.plugman
-                :get-plugin)
   (:export :start :stop :*eval-server*))
 (in-package :darkmatter)
 (defparameter *appfile-path*

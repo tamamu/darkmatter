@@ -22,7 +22,7 @@
           (car pkg)
           (let* ((magic (write-to-string (get-universal-time)))
                  (pkg (make-package (format nil "darkmatter.local.~A" magic)
-                                    :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
+                                  :use `(:cl :darkmatter.infix :darkmatter.suite))))
             (eval `(in-package ,(package-name pkg)))
             (setf (symbol-value (ensure-symbol :*current-directory* pkg))
                   (pathname
