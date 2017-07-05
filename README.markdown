@@ -58,7 +58,7 @@ $ darkm
 You can regist plugin with config file ($HOME/.darkmatter.conf) to add plugin file paths.  
 See [example](https://github.com/tamamu/darkmatter/blob/master/darkmatter.conf.example).
 
-See also plugin example, [plot.lisp](https://github.com/tamamu/darkmatter/blob/master/src/plot.lisp) and [LispPlot.js](https://github.com/tamamu/darkmatter/blob/master/static/LispPlot.js).
+See also examples, [examples/plugtest.lisp](https://github.com/tamamu/blob/master/examples/plugtest.lisp) or [plot.lisp](https://github.com/tamamu/darkmatter/blob/master/src/plot.lisp) and [LispPlot.js](https://github.com/tamamu/darkmatter/blob/master/static/LispPlot.js).
 
 ## See Also
 
