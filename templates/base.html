@@ -30,6 +30,9 @@
   <script src="/static/Utils.js"></script>
   <script src="/static/Slide.js"></script>
   <script src="/static/startup.js"></script>
+  {% for plugin in plugins %}
+  <script src="/plugin/{{ plugin.name }}/{{ plugin.script }}"></script>
+  {% endfor %}
   <link rel="stylesheet" href="/static/components/katex/katex.min.css">
   <link rel="stylesheet" href="/static/editcell.css">
   <link rel="stylesheet" href="/static/ui.css">

@@ -26,8 +26,14 @@
                :bordeaux-threads)
   :components ((:module "src"
                 :components
-                ((:file "darkmatter" :depends-on ("async" "infix" "suite"))
+                ((:file "darkmatter" :depends-on ("serve" "async" "eval" "pacman" "save"))
+                 (:file "serve" :depends-on ("pacman" "plugman"))
+                 (:file "eval" :depends-on ("async" "pacman"))
+                 (:file "pacman" :depends-on ("plot" "infix" "suite"))
+                 (:file "plugman")
+                 (:file "save" )
                  (:file "async")
+                 (:file "plot")
                  (:file "infix")
                  (:file "suite"))))
   :description ""

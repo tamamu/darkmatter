@@ -5,33 +5,32 @@
                 :clackup)
   (:import-from :lack.builder
                 :builder)
-  (:import-from :djula
-                :add-template-directory
-                :compile-template*
-                :render-template*)
   (:import-from :string-case
                 :string-case)
-  (:import-from :cl-markup
-                :markup
-                :escape-string)
   (:import-from :alexandria
                 :if-let
-                :ensure-symbol
-                :read-file-into-string
                 :starts-with-subseq)
   (:import-from :darkmatter.async
-                :check-task
-                :attach-runtask
                 :attach-task-thread
                 :get-task-output
-                :set-task-kill
                 :get-task-thread
                 :send-recv
                 :exists-task)
+  (:import-from :darkmatter.serve
+                :read-global-file
+                :serve-index
+                :get-editable-file
+                :notfound)
+  (:import-from :darkmatter.eval
+                :eval-string)
+  (:import-from :darkmatter.pacman
+                :recall-package)
+  (:import-from :darkmatter.save
+                :save-file)
+  (:import-from :darkmatter.plugman
+                :get-plugin)
   (:export :start :stop :*eval-server*))
 (in-package :darkmatter)
-
-
 (defparameter *appfile-path*
   (asdf:system-relative-pathname "darkmatter" #P"app.lisp"))
 
@@ -39,211 +38,6 @@
 
 (defparameter *root-directory*
   (asdf:system-relative-pathname "darkmatter" ""))
-
-(defparameter *static-directory*
-  (asdf:system-relative-pathname "darkmatter" "static/"))
-
-(djula:add-template-directory (asdf:system-relative-pathname "darkmatter" "templates/"))
-(defparameter +base.html+ (djula:compile-template* "base.html"))
-
-(defparameter *local-packages* (make-hash-table :test 'equal))
-(defparameter *package-temp* nil)
-
-(defpackage darkmatter.plot
-  (:use :cl)
-  (:export scatter
-           make-scatter
-           line
-           make-line))
-(in-package :darkmatter.plot)
-(defstruct scatter
-  (xlabel "x" :type string)
-  (ylabel "y" :type string)
-  (data #() :type array))
-(defstruct line
-  (data #() :type array))
-(in-package darkmatter)
-
-(defmacro get-package (path)
-  `(gethash ,path *local-packages*))
-
-(defmacro farguments (symbol)
-  `(third (function-lambda-expression (symbol-function ,symbol))))
-
-(defmacro marguments (symbol)
-  `(third (car (last (function-lambda-expression (macro-function ,symbol))))))
-
-(defun symbol-detail (symbol)
-  (let ((name (symbol-name symbol)))
-    (cond
-      ((macro-function symbol)
-       `(:obj ("type" . "macro")
-              ("doc" . ,(documentation symbol 'function))
-              ("arguments" . ,(marguments symbol))))
-      ((fboundp symbol)
-       `(:obj ("type" . "function")
-              ("doc" . ,(documentation symbol 'function))
-              ("arguments" . ,(farguments symbol))))
-      ((find-class symbol nil)
-       `(:obj ("type" . "class")
-              ("doc" . ,(documentation symbol 'type))))
-      ((boundp symbol)
-       `(:obj ("type" . "variable")
-              ("doc" . ,(documentation symbol 'variable))))
-      (t
-       `(:obj ("type" . "symbol"))))))
-
-;;; (<package> . "package-name")
-(defun make-temporary-package (path)
-  (print (directory-namestring path))
-  (if-let (pkg (gethash path *local-packages*))
-          (car pkg)
-          (let* ((magic (write-to-string (get-universal-time)))
-                 (pkg (make-package (format nil "darkmatter.local.~A" magic)
-                                    :use `(:cl :darkmatter.plot :darkmatter.infix :darkmatter.suite))))
-            (eval `(in-package ,(package-name pkg)))
-            (setf (symbol-value (ensure-symbol :*current-directory* pkg))
-                  (pathname
-                    (directory-namestring
-                      (merge-pathnames *default-pathname-defaults* path))))
-            (in-package :darkmatter)
-            (use-package pkg 'darkmatter)
-            (setf (gethash path *local-packages*)
-                  (cons pkg (package-name pkg)))
-            pkg)))
-
-(defun recall-package (path)
-  (let ((pkg (car (get-package path))))
-    (setf (gethash path *local-packages*) nil)
-    (unuse-package pkg 'darkmatter)
-    (delete-package pkg)
-    (make-temporary-package path)
-    '(:obj)))
-
-(defun eval-string (path src cell id)
-  (format t "Come: ~A~%" src)
-  (let ((pkg (get-package path)))
-    (when (null pkg)
-      (let ((new-package (make-temporary-package path)))
-        (setf pkg (cons new-package (package-name new-package)))))
-    (if-let (last-package (cdr pkg))
-            (eval `(in-package ,last-package))
-            (eval `(in-package ,(package-name (car pkg)))))
-  (let* ((standard-output *standard-output*)
-         (*standard-output* (make-string-output-stream))
-         (*error-output* (make-string-output-stream))
-         ($<error-output> "")
-         ($<standard-output> "")
-         (sexp nil)
-         (symbols `(:obj))
-         (return-value nil)
-         (pos 0))
-    (handler-case
-      (loop while pos
-            do (multiple-value-setq (sexp pos)
-                 (read-from-string src :eof-error-p t :start pos))
-               (setf sexp (attach-runtask sexp))
-               (setf return-value (eval sexp))
-               (when (symbolp return-value)
-                 (setf symbols
-                       (append symbols
-                               (list
-                                (cons (symbol-name return-value)
-                                      (symbol-detail return-value)))))))
-      (END-OF-FILE (c) nil)
-      (error (c) (format t "<pre>~A</pre>" c)))
-    (setf $<error-output> (get-output-stream-string *error-output*))
-    (setf $<standard-output> (get-output-stream-string *standard-output*))
-    (setf (cdr (gethash path darkmatter::*local-packages*)) (package-name *package*))
-    (in-package :darkmatter)
-    (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
-    (if-let (task (check-task cell id return-value))
-            (progn
-              (setf (jsown:val task "symbols") symbols)
-              task)
-            `(:obj ("message" . "result")
-                   ("return" .
-                    ,(escape-string (format nil "~A" return-value)))
-                   ("symbols" . ,symbols)
-                   ("output" .
-                    ,(format nil "~A~A"
-                       (if (string= "" $<error-output>)
-                           ""
-                           (markup (:pre $<error-output>)))
-                       (string-left-trim '(#\Space #\Newline) $<standard-output>))))))))
-
-(defun save-file (fname data)
-  (format t "save~%")
-  (let ((res (list)))
-    (loop for d in data
-          for c = `((:id . ,(jsown:val d "id"))
-                    (:next . ,(jsown:val d "next"))
-                    (:prev . ,(jsown:val d "prev"))
-                    (:count . ,(jsown:val d "count"))
-                    (:lang . ,(jsown:val d "lang"))
-                    (:lisp . ,(jsown:val d "lisp"))
-                    (:md . ,(jsown:val d "md"))
-                    (:output . ,(jsown:val d "output")))
-          do (setf res (append res (list c))))
-    (push :darkmatter res)
-    (let ((path fname))
-      (unless (ensure-directories-exist fname)
-          (setf path "./tmp.dm.lisp"))
-      (with-open-file (out path :direction :output :if-exists :supersede)
-        (print res out))
-        `(:obj ("return" . ,(format nil "~A" fname))))))
-
-(defun read-file (env path)
-  (format t "read: ~A~%" path)
-  (let ((mime (gethash "content-type" (getf env :headers))))
-    (with-open-file (stream path :direction :input :if-does-not-exist nil)
-      `(200 (:content-type ,mime
-             :content-length ,(file-length stream))
-        ,(pathname path)))))
-
-(defun serve-index ()
-  `(200 (:content-type "text/html")
-    (,(read-file-into-string (merge-pathnames *static-directory* "index.html")))))
-
-(defun read-global-file (env path)
-  (let ((fp (probe-file path)))
-    (if (string= "LISP" (string-upcase (pathname-type path)))
-      (if fp
-          (get-editable-file env path)
-          (new-editable-file env path))
-      (if fp
-        (if (pathname-name fp)
-            (read-file env path)
-            (notfound env)) ;; Open directory
-        (notfound env)))))
-
-(defun new-editable-file (env path)
-  (make-temporary-package path)
-  `(200 (:content-type "text/html")
-    (,(render-template* +base.html+ nil
-                        :root (directory-namestring path)
-                        :host (getf env :server-name)
-                        :port (getf env :server-port)
-                        :path path
-                        :token (write-to-string (get-universal-time))))))
-
-(defun get-editable-file (env path)
-  (make-temporary-package path)
-  (with-open-file (in path :direction :input)
-    (let ((editcells (read in)))
-      (if (eq :darkmatter (car editcells))
-        `(200 (:content-type "text/html")
-          (,(render-template* +base.html+ nil
-                              :editcells (cdr editcells)
-                              :root (directory-namestring path)
-                              :host (getf env :server-name)
-                              :port (getf env :server-port)
-                              :path path
-                              :token (write-to-string (get-universal-time)))))
-        (notfound env)))))
-
-(defun notfound (env)
-  `(404 (:content-type "text/plain") ("404 Not Found")))
 
 (defun websocket-p (env)
   (string= "websocket" (gethash "upgrade" (getf env :headers))))
@@ -305,16 +99,21 @@
     (if (string= "/" uri)
         (serve-index)
         (let ((path (subseq uri 1)))
-          (multiple-value-bind (browse-p path)
+          (multiple-value-bind (browse-p browse-path)
             (starts-with-subseq "browse/" path :return-suffix t)
             (if (and browse-p
-                     (not (starts-with-subseq "/" path)))
-                (if-let (data (read-global-file env path))
+                     (not (starts-with-subseq "/" browse-path)))
+                (if-let (data (read-global-file env browse-path))
                         data
                         (if (string= "LISP" (string-upcase (pathname-type path)))
-                            (get-editable-file env path)
+                            (get-editable-file env browse-path)
                             (notfound env)))
-                (notfound env)))))))
+                (multiple-value-bind (plugin-p plugin-path)
+                  (starts-with-subseq "plugin/" path :return-suffix t)
+                  (format t "~A:~A~%" plugin-p plugin-path)
+                  (if plugin-p
+                      (get-plugin env plugin-path)
+                      (notfound env)))))))))
 
 (defun handle-put (env)
   (let ((input (flexi-streams:make-flexi-stream
