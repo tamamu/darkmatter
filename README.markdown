@@ -67,6 +67,7 @@ See also examples, [examples/plugtest.lisp](https://github.com/tamamu/darkmatter
 * [marked](https://github.com/chjj/marked) - A markdown parser and compiler
 * [KaTeX](https://github.com/Khan/KaTeX) - Fast math typesetting for the web
 * [d3](https://github.com/d3/d3) - Data visualizing library for the web
+* [Font Awesome](http://fontawesome.io/) - The iconic font and CSS toolkit
 
 ## Author
 
