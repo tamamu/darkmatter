@@ -1,6 +1,8 @@
 (in-package :cl-user)
 (defpackage darkmatter.serve
   (:use :cl)
+  (:import-from :cl-fad
+                :list-directory)
   (:import-from :djula
                 :add-template-directory
                 :compile-template*
@@ -29,6 +31,7 @@
 
 (djula:add-template-directory (asdf:system-relative-pathname "darkmatter" "templates/"))
 (defparameter +base.html+ (djula:compile-template* "base.html"))
+(defparameter +browse.html+ (djula:compile-template* "browse.html"))
 
 (defun read-file (env path)
   (format t "read: ~A~%" path)
@@ -37,6 +40,39 @@
       `(200 (:content-type ,mime
              :content-length ,(file-length stream))
         ,(pathname path)))))
+
+(defun read-directory (env path)
+  (let ((files
+          (mapcar
+            (lambda (pathname)
+              (let* ((ename (enough-namestring pathname))
+                     (fname (file-namestring ename))
+                     (dname (car (last (pathname-directory ename))))
+                     (dir-p (string= fname ""))
+                     (truename (if dir-p
+                                   dname
+                                   fname)))
+                (list `("name" . ,truename)
+                      `("path" . ,ename)
+                      `("type" . ,(if dir-p "directory" (pathname-type ename)))
+                      `("display" . ,(if (starts-with-subseq "." truename)
+                                         "hidden"
+                                         "")))))
+            (fad:list-directory path))))
+    (when (string/= "" (enough-namestring path))
+          (push (list `("name" . "..")
+                      `("path" . ,(fad:pathname-parent-directory path))
+                      `("type" . "parent-directory")
+                      `("display" . ""))
+                files))
+    `(200 (:content-type "text/html")
+      (,(render-template* +browse.html+ nil
+                          :root (directory-namestring path)
+                          :host (getf env :server-name)
+                          :port (getf env :server-port)
+                          :path path
+                          :token (write-to-string (get-universal-time))
+                          :files files)))))
 
 (defun serve-index ()
   `(200 (:content-type "text/html")
@@ -51,7 +87,7 @@
       (if fp
         (if (pathname-name fp)
             (read-file env path)
-            (notfound env)) ;; Open directory
+            (read-directory env path)) ;; Open directory
         (notfound env)))))
 
 (defun new-editable-file (env path)
@@ -69,7 +105,9 @@
   (make-temporary-package path)
   (with-open-file (in path :direction :input)
     (let ((editcells (read in)))
-      (if (eq :darkmatter (car editcells))
+      (if (and
+            (listp editcells)
+            (eq :darkmatter (car editcells)))
         `(200 (:content-type "text/html")
           (,(render-template* +base.html+ nil
                               :editcells (cdr editcells)
