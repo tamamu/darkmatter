@@ -18,6 +18,8 @@
   :license "MIT"
   :depends-on (:clack
                :websocket-driver-server
+               :quri
+               :cl-fad
 							 :jsown
                :djula
                :string-case

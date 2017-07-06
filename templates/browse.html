@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+  <title>Darkmatter | {{ path }}</title>
+	<script>
+    const ROOT_DIR = "{{ root }}";
+    const SERVER_HOST = "{{ host }}";
+    const SERVER_PORT = "{{ port }}";
+		const LS_URI = `ws://${SERVER_HOST}:${SERVER_PORT}`;
+    const HTTP_URI = `http://${SERVER_HOST}:${SERVER_PORT}`;
+    const CD_URI = `${HTTP_URI}/${ROOT_DIR}`;
+    const FILE_PATH = "{{ path }}";
+    const TOKEN = "{{ token }}";
+  </script>
+  <link rel="stylesheet" href="/static/components/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/static/browse.css">
+  <script src="/static/KeyBinder.js"></script>
+  <script src="/static/Utils.js"></script>
+  <script src="/static/LispSocket.js"></script>
+  <script src="/static/Browse.js"></script>
+  <style>
+ </style>
+ </head>
+ <body unresolved>
+
+  <header>
+    <h1>Darkmatter Notebook</h1>
+    <p>{{ path }}</p>
+    <p id="alert" class="right"></p>
+  </header>
+
+  <section>
+    <input class="hidden" id="create-new-file" type="checkbox">
+    <label for="create-new-file">
+      Create New
+    </label>
+    <span id="new-file-container" class="hidden">
+      <input id="new-file-name" type="text">.dm.lisp
+      <a class="button" href="javascript:return null;" onclick="createFile();">Create</a>
+    </span>
+
+    <input class="hidden" id="display-all" type="checkbox">
+    <label for="display-all">
+      Show Hidden
+      <span class="toggle-button"></span>
+    </label>
+    <ul>
+      {% for file in files %}
+      <li data-type="{{ file.type }}" data-hidden="{{ file.display }}">
+        <a href="http://{{ host }}:{{ port }}/browse/{{ file.path }}">
+        {{ file.name }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+</body>
+</html>

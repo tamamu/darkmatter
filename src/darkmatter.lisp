@@ -5,6 +5,8 @@
                 :clackup)
   (:import-from :lack.builder
                 :builder)
+  (:import-from :quri
+                :url-decode)
   (:import-from :string-case
                 :string-case)
   (:import-from :alexandria
@@ -94,7 +96,7 @@
       (start-connection ws))))
 
 (defun handle-get (env)
-  (let ((uri (getf env :request-uri)))
+  (let ((uri (url-decode (getf env :request-uri))))
     (if (string= "/" uri)
         (serve-index)
         (let ((path (subseq uri 1)))
