@@ -122,13 +122,6 @@
             (append form (list acc)))
           forms :initial-value value))
 
-(defun startswith (a b)
-  (let ((alen (length a))
-        (blen (length b)))
-    (if (>= alen blen)
-      (string= (subseq a 0 blen) b)
-      nil)))
-
 (defun attach-task (id task)
   (->$ (task-entity-body task)
        (attach-checkpoint)
