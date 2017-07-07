@@ -5,16 +5,16 @@ class LispRenderer {
     this.socket = socket;
   }
 
-	plotStruct(obj) {
+	renderStruct(obj) {
 		let structName = obj.$type;
     let res = null;
-    for (let renderer of StructRenderer) {
-      if (structName === renderer.name || structName === renderer.short) {
-        res = renderer.render(obj);
+    for (let struct of StructRenderer) {
+      if (structName === struct.name || structName === struct.short) {
+        res = new struct.renderer(obj);
         break;
       }
     }
-   return res;
+    return res;
 	}
 
 	plotArray(vec) {
@@ -47,7 +47,7 @@ class LispRenderer {
 	}
 
   convert(src) {
-    let res = "";
+    let res = [];
     let idx = 0;
     let beforeIdx = 0;
     let contents = null;
@@ -55,19 +55,19 @@ class LispRenderer {
       [contents, idx] = ResultParser.parse(src, idx)
       if (typeof(contents) === 'object') {
         if (Array.isArray(contents)) {
-          res += this.plotArray(contents);
+          res.push(this.plotArray(contents));
         } else if (contents.$type) {
-          let struct = this.plotStruct(contents);
+          let struct = this.renderStruct(contents);
           if (struct) {
-            res += struct;
+            res.push(struct);
           } else {
-            res += src.substring(beforeIdx, idx);
+            res.push(src.substring(beforeIdx, idx));
           }
         } else {
-          res += src.substring(beforeIdx, idx);
+          res.push(src.substring(beforeIdx, idx));
         }
       } else {
-        res += src.substring(beforeIdx, idx);
+        res.push(src.substring(beforeIdx, idx));
       }
       beforeIdx = idx;
     }

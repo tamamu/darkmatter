@@ -19,7 +19,6 @@
 (defstruct task-entity
   (body nil)
   (output nil)
-  (cell "")
   (should-kill-p nil)
   (exit-p nil)
   (thread nil))
@@ -140,7 +139,7 @@
        (eval)
        (setf (task-entity-body task))))
 
-(defun check-task (cell id obj)
+(defun check-task (id obj)
   (if (task-entity-p obj)
       (let ((task obj))
         (unless (null (exists-task id))
@@ -149,7 +148,6 @@
             (join-thread (get-task-thread id))))
         (attach-task id task)
         (regist-task id task)
-        (setf (task-entity-cell task) cell)
         `(:obj ("message" . "alert_start")
                ("id" . ,id)))
       nil))

@@ -25,8 +25,13 @@ class Cell {
   }
 
   render(returnValue, result) {
+    console.log(result);
     this.output.innerHTML = returnValue?`<div id="result">${returnValue}</div>`:"";
-    this.output.innerHTML += result;
+    if (result instanceof Element) {
+      this.output.appendChild(result);
+    } else {
+      this.output.innerHTML += result;
+    }
     if (this.output.innerHTML.length>0) {
       this.output.className = 'show';
       this.element.classList.add('success');

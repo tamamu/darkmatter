@@ -29,6 +29,7 @@ class AlertSocket {
     console.log('init');
     let sender = JSON.stringify({
       message: 'init',
+      cell: this.cell,
       id: this.id
     });
     conn.send(sender);
@@ -113,7 +114,6 @@ class AlertSocket {
   }
 
   recv(e) {
-    console.log(this.timer);
     let json = JSON.parse(e.data);
     console.log(json);
     this.attempts = 1;
@@ -131,7 +131,7 @@ class AlertSocket {
         this.onexit();
         break;
       case 'update':
-        this.onupdate(this.cell, json.output);
+          this.onupdate(this.cell, json.output);
         break;
       default:
         this.id = null;

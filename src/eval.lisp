@@ -78,7 +78,7 @@
     (setf (cdr (gethash path darkmatter.pacman:*local-packages*)) (package-name *package*))
     (in-package :darkmatter)
     (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
-    (if-let (task (check-task cell id return-value))
+    (if-let (task (check-task id return-value))
             (progn
               (setf (jsown:val task "symbols") symbols)
               task)

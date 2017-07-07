@@ -2,6 +2,7 @@
 
 Modified = false;
 Alerts = {};
+CellOutputObject = {};
 
 class LispSocket {
   constructor(http_uri, ws_uri, filepath, token) {
@@ -75,8 +76,35 @@ class LispSocket {
   spawnAlert(cell, id) {
     let alertSocket = new AlertSocket(this.wsUri, cell, id, 1000);
     Alerts[cell] = alertSocket;
+    CellOutputObject[cell] = null;
     alertSocket.onupdate = (cell, output) => {
-      Cells[cell].render(null, Cells[cell].renderer.getRenderMethod('lisp').convert(output));
+      // OutputRenderer exists?
+      if (CellOutputObject[cell]) {
+        // If it exists and update object has come, update the element.
+        let converted = Cells[cell].renderer
+          .getRenderMethod('lisp').convert(output);
+        // Check the type equality between the output and previous output
+        if (converted.length > 0 &&
+            typeof converted[0] === 'object' &&
+            converted[0].constructor === CellOutputObject[cell].constructor) {
+          CellOutputObject[cell].update(converted[0]);
+        } else {
+          Cells[cell].render(null, converted);
+        }
+
+      } else {
+        let converted = Cells[cell].renderer
+          .getRenderMethod('lisp').convert(output);
+        // Check the output type
+        if (converted.length > 0 &&
+            typeof converted[0] === 'object' &&
+            converted[0].element) {
+          CellOutputObject[cell] = converted[0];
+          Cells[cell].render(null, converted[0].element);
+        } else {
+          Cells[cell].render(null, converted);
+        }
+      }
     };
     alertSocket.open();
   }

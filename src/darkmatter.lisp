@@ -146,7 +146,8 @@
            (id (concatenate 'string addr
                                 ":" port
                                 ":" token
-                                ":" file))
+                                ":" file
+                                ":" cell))
            (res (string-case
                   (message)
                   ("eval" (eval-string file
