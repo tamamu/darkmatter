@@ -41,7 +41,6 @@ class LispSocket {
 
   onOpen(callback, connection) {
     return function() {
-      //this.socket = connection;
       this.attempts = 1;
       this.connected = true;
       if (callback) {
@@ -70,7 +69,6 @@ class LispSocket {
   open(callback = null) {
     let connection = new WebSocket(this.wsUri);
     connection.addEventListener('open', this.onOpen(callback, connection).bind(this), false);
-    //connection.addEventListener('close', this.onClose(callback).bind(this), false);
     connection.addEventListener('error', this.onError.bind(this), false);
   }
 
@@ -78,7 +76,7 @@ class LispSocket {
     let alertSocket = new AlertSocket(this.wsUri, cell, id, 1000);
     Alerts[cell] = alertSocket;
     alertSocket.onupdate = (cell, output) => {
-      Cells[cell].render(null, output);
+      Cells[cell].render(null, Cells[cell].renderer.getRenderMethod('lisp').convert(output));
     };
     alertSocket.open();
   }

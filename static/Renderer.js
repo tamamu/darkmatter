@@ -3,6 +3,10 @@ class Renderer {
     this.methods = {};
   }
 
+  getRenderMethod(name) {
+    return this.methods[name];
+  }
+
   registRenderMethod(name, method) {
     this.methods[name] = method;
   }

@@ -46,6 +46,34 @@ class LispRenderer {
 		return table.outerHTML;
 	}
 
+  convert(src) {
+    let res = "";
+    let idx = 0;
+    let beforeIdx = 0;
+    let contents = null;
+    while (src.length > idx) {
+      [contents, idx] = ResultParser.parse(src, idx)
+      if (typeof(contents) === 'object') {
+        if (Array.isArray(contents)) {
+          res += this.plotArray(contents);
+        } else if (contents.$type) {
+          let struct = this.plotStruct(contents);
+          if (struct) {
+            res += struct;
+          } else {
+            res += src.substring(beforeIdx, idx);
+          }
+        } else {
+          res += src.substring(beforeIdx, idx);
+        }
+      } else {
+        res += src.substring(beforeIdx, idx);
+      }
+      beforeIdx = idx;
+    }
+    return res;
+  }
+
   onEval(src, cellId) {
     return (resolve, reject) => {
       this.socket.eval(src, cellId).then((obj) => {
@@ -53,31 +81,7 @@ class LispRenderer {
         if (rendering) {
           let val = obj['returnValue'];
           let evaluated = obj['result'];
-          let res = "";
-          let idx = 0;
-          let beforeIdx = 0;
-          let contents = null;
-          while (evaluated.length > idx) {
-            [contents, idx] = ResultParser.parse(evaluated, idx)
-            if (typeof(contents) === 'object') {
-              if (Array.isArray(contents)) {
-                res += this.plotArray(contents);
-              } else if (contents.$type) {
-                let struct = this.plotStruct(contents);
-                if (struct) {
-                  res += struct;
-                } else {
-                  res += evaluated.substring(beforeIdx, idx);
-                }
-              } else {
-                res += evaluated.substring(beforeIdx, idx);
-              }
-            } else {
-              res += evaluated.substring(beforeIdx, idx);
-            }
-            beforeIdx = idx;
-          }
-          resolve({rendering: true, returnValue: val, result: res});
+          resolve({rendering: true, returnValue: val, result: this.convert(evaluated)});
         } else {
           resolve({rendering: false});
         }
