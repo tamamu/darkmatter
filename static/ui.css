@@ -189,6 +189,9 @@ g.tick {
 line {
   stroke: #eee8d5;
 }
+text {
+  stroke: #eee8d5;
+}
 .contents {
   display: flex;
   flex: 1;

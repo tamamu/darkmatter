@@ -6,6 +6,7 @@ class LinePlot {
       data.push([i, this.vec[i]]);
     }
     this.element = document.createElement('div');
+    this.element.style.textAlign = 'center';
     this.x = d3.scaleLinear()
               .range([0, 300]);
     this.y = d3.scaleLinear()
@@ -80,6 +81,7 @@ class ScatterPlot {
     this.vec = obj[":DATA"];
     if (this.vec.$type === '$<MATRIX>') this.vec = this.vec.data;
     this.element = document.createElement('div');
+    this.element.style.textAlign = 'center';
     this.x = d3.scaleLinear()
               .domain([0, d3.max(this.vec, d => d[0])])
               .range([0, 300]);
@@ -93,7 +95,7 @@ class ScatterPlot {
                 .append('svg')
                 .attr('wihth', '300')
                 .attr('height', '300')
-                .attr('style', 'overflow: visible; margin: 20px;')
+                .attr('style', 'overflow: visible; margin: 40px;')
                 .append('g')
                   .attr('transform', 'translate(40, 0)');
 
@@ -113,7 +115,7 @@ class ScatterPlot {
        .call(this.xAxis);
 
     svg.append('text')
-       .attr('transform', 'translate(150,330)')
+       .attr('transform', 'translate(150,340)')
        .style('text-anchor', 'middle')
        .text(obj[':XLABEL'])
 
@@ -123,7 +125,7 @@ class ScatterPlot {
 
     svg.append('text')
        .attr('transform', 'rotate(-90)')
-       .attr('y', -30)
+       .attr('y', -40)
        .attr('x', -150)
        .attr('dy', '1em')
        .attr('text-anchor', 'middle')
