@@ -52,12 +52,23 @@
   "Middleware for binding websocket message")
 
 (defun bind-init (ws id)
-  (attach-task-thread id)
-  (send ws
-        (jsown:to-json
-          `(:obj ("message" . "init")
-                 ("id" . ,id)
-                 ("output" . (get-task-output id))))))
+  (let* ((*error-output* (make-string-output-stream))
+         (error-p nil))
+    (handler-case
+      (attach-task-thread id)
+      (error (c) (progn
+                   (setf error-p t)
+                   (format t "<pre>~A</pre>" c))))
+    (if error-p
+        (send ws (jsown:to-json
+                   `(:obj ("message" . "error")
+                          ("id" . ,id)
+                          ("output" . ,(format nil "<pre>~A</pre>"
+                                               (get-output-stream-string *error-output*))))))
+        (send ws (jsown:to-json
+                   `(:obj ("message" . "init")
+                          ("id" . ,id)
+                          ("output" . (get-task-output id))))))))
 
 (defun bind-kill (ws id)
   (if-let (task (exists-task id))

@@ -80,11 +80,21 @@
     `(let (($<id> id-form)
            ($<result> nil))
        (lambda ()
-         (unwind-protect
-           (setf $<result> (progn ,@body))
-           (unless (null $<result>)
-             (set-task-output $<id> $<result>)
-             (set-task-exit $<id>)))))))
+         (let ((*standard-output* (make-string-output-stream))
+               (*error-output* (make-string-output-stream)))
+           (handler-case
+             (unwind-protect
+               (setf $<result> (progn ,@body))
+               (unless (null $<result>)
+                 (set-task-output $<id> $<result>)
+                 (set-task-exit $<id>)))
+             (error (c) (progn
+                          (set-task-output $<id>
+                                           (format nil "<pre>~A~A~A</pre>"
+                                                   (get-output-stream-string *standard-output*)
+                                                   (get-output-stream-string *error-output*)
+                                                   c))
+                          (set-task-exit $<id>)))))))))
 
 (defun symbol= (a b)
   (and (symbolp a)
@@ -107,7 +117,7 @@
           (progn
             (send ws (jsown:to-json
                        `(:obj ("message" . "update")
-                              ("output" . ,(get-task-output id)))))
+                              ("output" . ,(prin1-to-string (get-task-output id))))))
             (when (or (get-task-exit id)
                       (should-task-kill-p id))
               (progn
