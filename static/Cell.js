@@ -124,12 +124,12 @@ class Cell {
     return obj;
   }
 
-  static createElement(id, prev = '') {
+  static createElement(id, prev = '', lang = 'lisp') {
     let obj = new Cell();
     obj.element = document.createElement('div');
     obj.element.id = id;
     obj.element.className = 'cell';
-    obj.element.dataset.lang = 'lisp';
+    obj.element.dataset.lang = lang;
     obj.element.dataset.next = '';
     obj.element.dataset.prev = prev;
     let lispCache = document.createElement('div');
@@ -144,7 +144,7 @@ class Cell {
     obj.sources['md'] = mdCache;
     obj.editorElement = document.createElement('div');
     obj.editorElement.id = 'editor';
-    obj.editor = Cell.createEditor(obj.editorElement);
+    obj.editor = Cell.createEditor(obj.editorElement, lang);
     obj.editor.addEventListener('focus', (e) => {CurrentCell = obj.element.id;});
     obj.keyboardHandler = obj.editor.getKeyboardHandler();
     obj.output = document.createElement('div');
@@ -192,7 +192,7 @@ class Cell {
   }
 
   prependCell() {
-    let instance = Cell.createElement(Date.now().toString(), this.prev);
+    let instance = Cell.createElement(Date.now().toString(), this.prev, this.lang);
     instance.attachRenderer(this.renderer);
     instance.element.dataset.next = this.id;
     let prev = null;
@@ -206,7 +206,7 @@ class Cell {
   }
 
   appendCell() {
-    let instance = Cell.createElement(Date.now().toString(), this.id);
+    let instance = Cell.createElement(Date.now().toString(), this.id, this.lang);
     instance.attachRenderer(this.renderer);
     let next = null;
     if (this.next !== '') {
