@@ -18,7 +18,7 @@ $ brew install libev roswell
 
 
 # for Arch Linux
-$ yaourt install libev roswell
+$ yaourt -S libev roswell
 ```
 
 ```
