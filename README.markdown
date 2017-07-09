@@ -23,7 +23,7 @@ $ apt-get install libev-dev
 # and build roswell from source!
 
 # for Arch Linux
-$ yaourt install libev roswell
+$ yaourt -S libev roswell
 ```
 
 ```
