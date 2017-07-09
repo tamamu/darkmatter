@@ -10,12 +10,17 @@
 
 ## Installation
 
+See also [installation of roswell](https://github.com/roswell/roswell/wiki/1.-Installation).
+
 ```
 # Install requirements
 
 # for macOS
 $ brew install libev roswell
 
+# for Ubuntu/Debian
+$ apt-get install libev-dev
+# and build roswell from source!
 
 # for Arch Linux
 $ yaourt install libev roswell
