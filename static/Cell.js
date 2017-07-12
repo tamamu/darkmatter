@@ -8,7 +8,6 @@ ace.config.loadModule('ace/keybinding/vim', (m) => {
   });
 });
 
-
 class Cell {
   constructor(renderer) {
     this.element = null;
@@ -75,13 +74,13 @@ class Cell {
     let session = editor.getSession();
     switch (lang) {
       case 'lisp':
-        session.setMode('ace/mode/lisp');
+        session.setMode('ace/mode/common_lisp');
         break;
       case 'md':
         session.setMode('ace/mode/markdown');
         break;
       default:
-        session.setMode('ace/mode/lisp');
+        session.setMode('ace/mode/common_lisp');
         break;
     }
     session.setUseSoftTabs(true);
@@ -181,11 +180,11 @@ class Cell {
         break;
       case 'md':
         this.element.dataset.lang = 'lisp';
-        this.editor.getSession().setMode('ace/mode/lisp');
+        this.editor.getSession().setMode('ace/mode/common_lisp');
         break;
       default:
         this.element.dataset.lang = 'lisp';
-        this.editor.getSession().setMode('ace/mode/lisp');
+        this.editor.getSession().setMode('ace/mode/common_lisp');
         break;
     }
     this.editor.getSession().setValue(this.sources[this.lang].innerHTML);

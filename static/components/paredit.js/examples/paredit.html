@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://lively-web.org/users/robertkrahn/just-the-core/html-console.js" type="text/javascript" charset="utf-8"></script>
+
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">  
+    <title>Paredit Editor</title>  
+    <style type="text/css" media="screen">
+      body { overflow: hidden; width: 100%; }
+      #editor {
+        /*margin: 0;*/
+        /*top: 0; left: 0;*/
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        width: 900px; height: 700px;
+      }
+      .ace-syntax-error {
+      	position: absolute;
+      	border-radius: 3px;
+      	background: rgba(255,0,0,0.7);
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="editor">(defn parting
+  "returns a String parting in a given language"
+  ([] (parting "World"))
+  ([name] (parting name "en"))
+  ([name language]
+    ; condp is similar to a case statement in other languages.
+    ; It is described in more detail later.
+    ; It is used here to take different actions based on whether the
+    ; parameter "language" is set to "en", "es" or something else.
+    (condp = language
+      "en" (str "Goodbye, " name)
+      "es" (str "Adios, " name)
+      (throw (IllegalArgumentException.
+        (str "unsupported language " language))))))
+
+(println (parting)) ; -> Goodbye, World
+(println (parting "Mark")) ; -> Goodbye, Mark
+(println (parting "Mark" "es")) ; -> Adios, Mark
+(println (parting "Mark", "xy")) ; -> java.lang.IllegalArgumentException: unsupported language xy</pre>
+
+    <script src="https://cdn.jsdelivr.net/ace/1.1.8/noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/ace/1.1.8/noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/ace/1.1.8/noconflict/keybinding-emacs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../paredit-bundle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace.improvements.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace.ext.lang.codemarker.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace.ext.lang.ast-commands.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace.ext.keys.js" type="text/javascript" charset="utf-8"></script>
+    <script src="ace.ext.lang.paredit.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/solarized_light");
+      editor.getSession().setMode("ace/mode/clojure");    
+
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        showGutter: false,
+        highlightActiveLine: false,
+        showPrintMargin: false,
+        fontSize: 14
+      });
+
+      editor.keyBinding.addKeyboardHandler(
+        ace.require("ace/keyboard/emacs").handler);
+      var occurStartCommand = ace.require("ace/commands/occur_commands").occurStartCommand;
+      editor.commands.addCommand(occurStartCommand);
+      editor.commands.addCommands(ace.ext.lang.astCommands);
+
+      editor.focus();
+    </script>
+
+    <script type="text/javascript" src="http://lively-web.org/users/robertkrahn/node-lively2lively/lively2lively-browserified.js?name=paredit-ace&baseURL=http://localhost:9001&autoload=true"></script></style>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+    <script type="text/javascript" src="http://lively-web.org/users/robertkrahn/node-lively2lively/lively2lively-browserified.js?name=ace.improved-test&baseURL=http://localhost:9001&autoload=true"></script></style>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://lively-web.org/users/robertkrahn/just-the-core/html-console.js" type="text/javascript" charset="utf-8"></script>
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">  
+    <title>Editor</title>  
+    <style type="text/css" media="screen">
+      body {
+        overflow: hidden;
+      }
+      #editor {
+        margin: 0;
+        position: absolute;
+        top: 0; left: 0;
+        width: 500px; height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="editor">function foo(items) {
+  var i;
+  for (i = 0; i < items.length; i++) {
+    alert("Ace Rocks " + items[i]);
+  }
+}</pre>
+    <script type="text/javascript" src="http://cdn.jsdelivr.net/ace/1.2.3/noconflict/ace.js"></script> 
+    <script src="../lib/ace.improvements.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace.ext.custom-text-attributes.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace.ext.keys.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace.ext.lang.codemarker.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+      var ed = ace.edit("editor");
+      // ed.session.setMode("ace/mode/attributedtext")
+      // var m = ed.session.getMode()
+      // m.set(ed, [["Hello", "string"]])
+      ace.ext.keys.addKeyCustomizationLayer("test", {"golinedown": "Alt-t t"});
+    </script>
+  </body>
+</html>

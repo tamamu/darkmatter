@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://lively-web.org/users/robertkrahn/just-the-core/html-console.js" type="text/javascript" charset="utf-8"></script>
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">  
+    <title>Editor</title>  
+    <style type="text/css" media="screen">
+      body {
+        overflow: hidden;
+      }
+      #editor {
+        margin: 0;
+        position: absolute;
+        top: 0; left: 0;
+        width: 500px; height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="editor">xxx</pre>
+    <script type="text/javascript" src="http://cdn.jsdelivr.net/ace/1.2.3/noconflict/ace.js"></script> 
+    <script src="../lib/ace.ext.custom-text-attributes.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace.improvements.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+      var ed = ace.edit("editor");
+      ed.session.setMode("ace/mode/attributedtext")
+      var m = ed.session.getMode()
+      var spec = [
+        ["Press enter here", {type: "string", commands: [{name: 'oink', bindKey: 'enter', exec: function() { console.log("oink!"); }}]}],
+        ["\nNothing happens here...", {type: "text"}],
+        ["\nclick here!", {type: "markup.underline", onClick: 'oink'}]
+      ];
+      m.set(ed, spec)
+      
+    </script>
+  </body>
+</html>

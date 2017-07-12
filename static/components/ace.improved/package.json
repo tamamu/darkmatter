@@ -1,0 +1,91 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "ace.improved",
+        "scope": null,
+        "escapedName": "ace.improved",
+        "name": "ace.improved",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/home/tamamu/lisp-dev/darkmatter"
+    ]
+  ],
+  "_from": "ace.improved@latest",
+  "_id": "ace.improved@0.2.1",
+  "_inCache": true,
+  "_location": "/ace.improved",
+  "_nodeVersion": "4.4.0",
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/ace.improved-0.2.1.tgz_1463680445178_0.5266790653113276"
+  },
+  "_npmUser": {
+    "name": "robertkrahn",
+    "email": "robert.krahn@gmail.com"
+  },
+  "_npmVersion": "2.14.20",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "ace.improved",
+    "scope": null,
+    "escapedName": "ace.improved",
+    "name": "ace.improved",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/ace.improved/-/ace.improved-0.2.1.tgz",
+  "_shasum": "4d74628fc431b09cdcaa1fb2b23d1ec83c5d2f32",
+  "_shrinkwrap": null,
+  "_spec": "ace.improved",
+  "_where": "/home/tamamu/lisp-dev/darkmatter",
+  "author": {
+    "name": "Robert Krahn"
+  },
+  "bugs": {
+    "url": "https://github.com/rksm/ace.improved/issues"
+  },
+  "dependencies": {},
+  "description": "For a better ace editor",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "4d74628fc431b09cdcaa1fb2b23d1ec83c5d2f32",
+    "tarball": "https://registry.npmjs.org/ace.improved/-/ace.improved-0.2.1.tgz"
+  },
+  "gitHead": "b0b5014d9e31046608a10714c850a2441223a8f3",
+  "homepage": "https://github.com/rksm/ace.improved",
+  "keywords": [
+    "ace",
+    "programming",
+    "code editor"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "name": "mroeder",
+      "email": "m.roeder@photon-software.de"
+    },
+    {
+      "name": "robertkrahn",
+      "email": "robert.krahn@gmail.com"
+    }
+  ],
+  "name": "ace.improved",
+  "optionalDependencies": {},
+  "readme": "# ace.improved\n\nThis package extends the [ace editor](http://ace.c9.io/) with useful functionality such as:\n\n- helpers to lookup, install and remove key bindings\n- code markers\n- extended editor selection interface\n- ast based editor commands\n\n## Setup\n\nIn your webpage load ace and then include whatever parts of ace.improved you need:\n\n```html\n<script type=\"text/javascript\" src=\"http://cdn.jsdelivr.net/ace/1.2.3/noconflict/ace.js\"></script> \n<script src=\"ace.improved/lib/ace.improvements.js\"></script>\n<script src=\"ace.improved/lib/ace.ext.keys.js\"></script>\n<script src=\"ace.improved/lib/ace.ext.lang.codemarker.js\"></script>\n<!--...-->\n```\n\n## Interface\n\n### Editor object\n\n- `editor.posToIndex(pos) => index`\n\n  Converts `pos`, a `{column: NUMBER, line: NUMBER}` object, into the string\n  `index` / offset of `editor.getValue()`.\n\n- `editor.idxToPos(index) => pos`\n\n  The reverse of `posToIndex`.\n\n- `editor.getCursorIndex() => index`\n\n  Index of the current cursor position.\n\n- `editor.setSelection(...) => Range`\n\n  - `editor.setSelection(rangeString)`\n\n    Sets the selection range via a descriptive string, such as\n    `editor.setSelection(\"[0/2]->[0/4]\")` or\n    `editor.setSelection(\"[0/4]->[0/2]\")`. The first number designates the row,\n    the second the column.\n\n  - `editor.setSelection(startIndex, endIndex)`\n\n    Sets the selection range via a start and end index into the\n    `editor.getValue()` string, example: `ed.setSelection(3,10)`.\n\n  - `editor.setSelection(range)`\n\n    Also accepts a ace range object:\n    ```js\n    var Range = ace.require(\"ace/range\").Range;\n    var r = new Range(1,2,3, 10);\n    editor.setSelection(r)\n    ```\n\n- `editor.addSelection(...) => Range`\n\n  Like `setSelection` but for multiple selection ranges.\n\n- `editor.saveExcursion(doFunction)`\n\n  Remembers the current selection state and calls `doFunction` with one\n  argument, a reset function. `doFunction` can modify the selection state and\n  is able to revert all selection changes by calling the reset function in turn.\n  Example:\n  ```js\n  editor.selectAll()\n  editor.saveExcursion(function(resetFunc) {\n    editor.setSelection(\"[0/0]->[0/10]\");\n    setTimeout(function() { editor.setSelection(\"[0/0]->[0/10]\"); }, 500);\n    setTimeout(function() { editor.setSelection(\"[1/0]->[1/10]\"); }, 1000);\n    setTimeout(function() { editor.setSelection(\"[2/0]->[2/10]\"); }, 1500);\n    setTimeout(resetFunc, 2000);\n  });\n  ```\n\n### ace.ext.keys\n\nSome helpers around key handling: Simulating pressing keys and key sequences,\nlooking up key bindings, easily adding and removing new key bindings.\n\n- `ace.ext.keys.lookupKeys(editor, keyString) => Command`\n\n  Simulates inputing `keyString` into editor and records the editor command\n  this invokes without running the command. Returns the command.\n  (Editor commands are defined in `editor.keyBinding.$handlers`)\n\n  Example:\n\n  ```js\n  ace.ext.keys.lookupKeys(ed, \"Alt-Left\")\n  // => {\n  //   name: \"gotowordleft\",\n  //   bindKey: {mac: \"Option-Left\", win: \"Ctrl-Left\"},\n  //   exec: function(e) {/*...*/},\n  //   ...\n  // }\n  ```\n\n  If you want to implement an emacs-like _describe-key_ behavior you can use\n  `ace.ext.keyscaptureEditorCommand(editor, captureCommandFunc)` which is the\n  foo behind the lookupKeys method. This little incantation lets you do that:\n\n  ```js\n  var keyLib = ace.require(\"ace/lib/keys\");\n  var lastKeys = [];\n  var uninstallCapture = ace.ext.keys.captureEditorCommand(editor,\n    function(cmd) {\n      console.log(`Pressing ${lastKeys.join(\" \")}  invokes ${cmd.name}`);\n      uninstallCapture();\n    },\n    function(hashId, keyString, keyCode, event) {\n      if ((hashId in keyLib.KEY_MODS && keyCode === -1)\n       || [16,17,18,91,93,224].indexOf(keyCode) > -1) return; // Just a modifier being pressed\n      lastKeys.push(keyLib.KEY_MODS[hashId] + keyString);\n    });\n\n  ```\n\n\n- `ace.ext.keys.allEditorCommands(editor) => commandMap`\n\n  Searches through all handlers and key bindings and returns a complete map of\n  all commands in `editor`.\n  Particularly, returns a JS object that maps command names to lists of command\n  objects of the form `{cmd: {/*...*/}, cmdName: \"golineup\", key: \"up\"}`. For\n  example `ace.ext.keys.allEditorCommands(editor).golineup` returns\n  ```\n  [{\n    bindings: {/*...*/},\n    cmdName: \"golineup\",\n    key: \"up\"\n  },{\n    cmd: [/*...*/],\n    cmdName: \"golineup\",\n    key: \"ctrl-p\"\n  }]\n  ```\n\n- `ace.ext.keys.simulateKey(editor, keyString)`\n\n  Creates a keyboard event from `keyString` and runs it through `editor`,\n  effectively simulating user key press(es). Some normalization will be\n  applied, e.g. 'ctrl-A' and 'Control-A' is the same.\n  Input \"H\": `ace.ext.keys.simulateKey(ed, 'H')`\n  Select all (Mac OS): `ace.ext.keys.simulateKey(ed, 'Command-A')`\n  Select all (Win / Linux): `ace.ext.keys.simulateKey(ed, 'Control-A')`\n\n- `ace.ext.keys.simulateKeys(editor, keyString)`\n\n  Splits `keyString` by spaces and then inputs ea part as with `simulateKey`.\n  Processes both string input and command keys.\n  Example, enters text, then select it:\n  ```js\n  ace.ext.keys.simulateKeys(ed, 'H e l l o \\ W o r l d Command-a');\n  ```\n\n- `ace.ext.keys.addKeyCustomizationLayer(name, layerSpec)` and `ace.ext.keys.removeKeyCustomizationLayer(name)`\n\n  A quick (and easily reversable) way to add key bindings to `editor`. For key\n  customizations, temporary (e.g. mode dependant) key bindings etc. `name`\n  is the the layer id and layerSpec is an object like\n\n  ```\n  {\n    priority: NUMBER?,\n    modes: [STRING]?,\n    commandKeyBinding: {KEY_STRING: CMD_NAME, ...}\n  }\n  ```\n\n  Example:\n  ```js\n  // First: add a new command\n  ed.commands.addCommands([{name: \"test-command\", exec: function() { alert(\"test-command\"); }}]);\n  // Now bind a key to it\n  ace.ext.keys.addKeyCustomizationLayer(\"test-layer\", {priority: 10, commandKeyBinding: {\"alt-t\": \"test-command\"}});\n  ```\n\n  When you now press `alt-t` you should see a popup. Separating the binding\n  from the commands allows to easily change and override bindings:\n\n  ```js\n  // Add a second command\n  ed.commands.addCommands([{name: \"test-command-2\", exec: function() { alert(\"test-command-2\"); }}]);\n  // ... and bind it\n  ace.ext.keys.addKeyCustomizationLayer(\"test-layer-2\", {priority: 20, commandKeyBinding: {\"alt-t\": \"test-command-2\"}});\n  ```\n\n  Pressing `alt-t` now invokes the new command. To revert to the original behavior:\n\n  ```js\n  ace.ext.keys.removeKeyCustomizationLayer(\"test-layer\");\n  ace.ext.keys.removeKeyCustomizationLayer(\"test-layer-2\");\n  ```\n\n<!---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--->\n\n### code markers\n\nEasily highlight areas inside the editor.\n\nExample, add a yellow marker to 'this' and 'test'\n\n<!--document.getElementById(\"codemarker-css\") && document.getElementById(\"codemarker-css\").parentNode.removeChild(document.getElementById(\"codemarker-css\"))-->\n```js\n\n// Ensure CSS\ndocument.head.insertAdjacentHTML(\n  \"beforeend\",\n  `<style id=\"codemarker-css\">\n    .example-codemarker {\n    \tposition: absolute;\n    \tborder-radius: 3px;\n    \tbackground: rgba(204,204,0,0.7);\n    }\n  </style>`)\n\n// set the text\ned.session.setValue(\"this\\n is\\na\\n test\")\n\n// create a marker and highlight 'this' and 'test'\nvar marker = ace.ext.lang.codemarker.ensureIn(ed.session, \"example-codemarker\")\nmarker.set([{\n  cssClassName: \"example-codemarker\",\n  startPos: {row: 0, column: 0}, endPos: {row: 0, column: 4}\n}, {\n  cssClassName: \"example-codemarker\",\n  startPos: {row: 3, column: 1}, endPos: {row: 3, column: 5}\n}]);\n```\n\n\n<!---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--->\n\n### ast commands\n\n<!--\nAdds the editor commands\n\n- forwardSexp\n- backwardSexp\n- backwardUpSexp\n- forwardDownSexp\n- markDefun\n- expandRegion\n- contractRegion\n- gotoNextError\n- gotoPrevErrorOrWarning\n\n`ace.ext.lang.astCommands`\n-->\n\n_TODO_ add doc\n\n\n<!---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--->\n\n### attributed text mode\n\n```js\ned.session.setMode(\"ace/mode/text\");\ned.session.getMode().set(ed, [\n  [\"Hello\", {commands: [{name: 'oink', bindKey: 'enter'}]}]\n]);\n```\n\n_TODO_ add doc\n\n\n<!---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--->\n\n# Development\n\nRun the tests by visiting [tests/run-tests.html](tests/run-tests.html).\n\n<!---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--->\n\n# License\n\n[MIT](LICENSE)\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rksm/ace.improved.git"
+  },
+  "scripts": {},
+  "version": "0.2.1"
+}

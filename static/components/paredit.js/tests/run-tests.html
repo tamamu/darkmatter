@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tests</title>
+    <link type="text/css" rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="pragma" content="no-cache" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script type="text/javascript" src="helper.js"></script>
+    <script type="text/javascript" src="mocha-bundle.js"></script>
+
+    <script type="text/javascript">
+      mocha.setup("bdd");
+      var bundled = document.location.search.indexOf("bundled=true") > -1;
+      var lib = bundled ? ["../paredit-bundle.min.js"] :
+        ['../index.js',
+         '../lib/util.js',
+         '../lib/reader.js',
+         '../lib/navigator.js',
+         '../lib/editor.js'];
+      var tests = [
+        "reader-test.js",
+        "navigator-test.js",
+        "editor-test.js"
+      ];
+      loadUncached(lib.concat(tests), function() {
+        mocha.checkLeaks();
+        if (window.mochaPhantomJS) mochaPhantomJS.run();
+        else mocha.run();
+      });
+    </script>
+
+  </body>
+</html>

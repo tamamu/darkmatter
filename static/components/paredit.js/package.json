@@ -1,0 +1,100 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "paredit.js",
+        "scope": null,
+        "escapedName": "paredit.js",
+        "name": "paredit.js",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/home/tamamu/lisp-dev/darkmatter"
+    ]
+  ],
+  "_from": "paredit.js@latest",
+  "_id": "paredit.js@0.3.2",
+  "_inCache": true,
+  "_location": "/paredit.js",
+  "_nodeVersion": "7.7.3",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/paredit.js-0.3.2.tgz_1499047070066_0.1615857465658337"
+  },
+  "_npmUser": {
+    "name": "robertkrahn",
+    "email": "robert.krahn@gmail.com"
+  },
+  "_npmVersion": "4.5.0",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "paredit.js",
+    "scope": null,
+    "escapedName": "paredit.js",
+    "name": "paredit.js",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/paredit.js/-/paredit.js-0.3.2.tgz",
+  "_shasum": "2f57489cf4feed5a80a6b07f6bd61006ff1c0f75",
+  "_shrinkwrap": null,
+  "_spec": "paredit.js",
+  "_where": "/home/tamamu/lisp-dev/darkmatter",
+  "author": {
+    "name": "Robert Krahn"
+  },
+  "bundle": {
+    "files": [
+      "index.js",
+      "lib/util.js",
+      "lib/reader.js",
+      "lib/navigator.js",
+      "lib/editor.js"
+    ]
+  },
+  "dependencies": {
+    "ace.improved": ">=0.1.4"
+  },
+  "description": "Generic parser and editor for s-expressions.",
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "chai-subset": "^0.3.0",
+    "concat": "^1.0.0",
+    "mocha": "^2.0.1",
+    "uglify-js": "^2.4.16"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "2f57489cf4feed5a80a6b07f6bd61006ff1c0f75",
+    "tarball": "https://registry.npmjs.org/paredit.js/-/paredit.js-0.3.2.tgz"
+  },
+  "gitHead": "4db1cab589f56143bff692cf5c58fd3165651fee",
+  "keywords": [
+    "paredit",
+    "lisp",
+    "clojure",
+    "code editor",
+    "programming"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "name": "robertkrahn",
+      "email": "robert.krahn@gmail.com"
+    }
+  ],
+  "name": "paredit.js",
+  "optionalDependencies": {},
+  "readme": "![](http://robert.kra.hn/images/paredit-logo.jpg)\n\nEditing [the language of gods](https://www.youtube.com/watch?v=5-OjTPj7K54)\ncivilized, even on the web.\n\nFor more details see the project page [here](http://robert.kra.hn/projects/paredit-js).\n\n## Usage\n\n`npm install` then see examples.\n\n\n## Dev\n\nLoad via lively.modules:\n\n```js\nawait load();\n\nasync function load() {\n  var lm = lively.modules,\n      files = [\"./index.js\",\n               './lib/util.js',\n               \"./lib/reader.js\",\n               \"./lib/navigator.js\",\n               \"./lib/editor.js\",\n               // \"./tests/reader-test.js\",\n               // \"./tests/navigator-test.js\",\n               // \"./tests/editor-test.js\"\n              ],\n      p = lm.getPackage(\"paredit.js\");\n  for (let f of files) await lm.module(lively.lang.string.joinPath(p.url, f)).reload();\n}\n```\n",
+  "readmeFilename": "README.md",
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha tests/*-test.js"
+  },
+  "version": "0.3.2"
+}
