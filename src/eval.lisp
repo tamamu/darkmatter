@@ -59,20 +59,20 @@
         (loop while pos
               do (multiple-value-setq (sexp pos)
                    (read-from-string src :eof-error-p t :start pos))
-              (setf sexp (attach-runtask sexp))
-              (setf return-value (eval sexp))
-              (when (symbolp return-value)
-                (setf symbols
-                      (append symbols
-                              (list
-                               (cons (symbol-name return-value)
-                                     (symbol-detail return-value)))))))
+                 (setf sexp (attach-runtask sexp))
+                 (setf return-value (eval sexp))
+                 (when (symbolp return-value)
+                   (setf symbols
+                         (append symbols
+                                 (list
+                                  (cons (symbol-name return-value)
+                                        (symbol-detail return-value)))))))
       (end-of-file (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
+    (setf (cdr (gethash path darkmatter.pacman:*local-packages*)) (package-name *package*))
     (let (($<error-output> (get-output-stream-string *error-output*))
           ($<standard-output> (get-output-stream-string *standard-output*))
           (*package* (find-package :darkmatter)))
-      (setf (cdr (gethash path darkmatter.pacman:*local-packages*)) (package-name *package*))
       (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
       (if-let (task (check-task id return-value))
         (progn
