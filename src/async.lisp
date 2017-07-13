@@ -139,16 +139,15 @@
        (eval)
        (setf (task-entity-body task))))
 
-(defun check-task (id obj)
-  (if (task-entity-p obj)
-      (let ((task obj))
-        (unless (null (exists-task id))
-          (progn
-            (set-task-kill id)
-            (join-thread (get-task-thread id))))
-        (attach-task id task)
-        (regist-task id task)
-        `(:obj ("message" . "alert_start")
-               ("id" . ,id)))
-      nil))
-
+(defun check-task (obj id symbols)
+  (when (task-entity-p obj)
+    (let ((task obj))
+      (unless (null (exists-task id))
+        (progn
+          (set-task-kill id)
+          (join-thread (get-task-thread id))))
+      (attach-task id task)
+      (regist-task id task)
+      (let ((task `(:obj ("message" . "alert_start")
+                         ("id" . ,id))))
+        (setf (jsown:val task "symbols") symbols)))))
