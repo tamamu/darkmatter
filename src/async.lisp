@@ -3,6 +3,9 @@
   (:use :cl :websocket-driver :bordeaux-threads)
   (:import-from :alexandria
                 :if-let)
+  (:import-from :darkmatter.eval
+                :treat-special-type
+                :*eval-preprocess*)
   (:export :attach-runtask
            :check-task
            :attach-task-thread
@@ -12,6 +15,8 @@
            :send-recv
            :exists-task))
 (in-package :darkmatter.async)
+
+(pushnew 'attach-runtask *eval-preprocess*)
 
 (defvar *taskbase*
   (make-hash-table :test #'equal))
@@ -139,15 +144,14 @@
        (eval)
        (setf (task-entity-body task))))
 
-(defun check-task (obj id symbols)
-  (when (task-entity-p obj)
-    (let ((task obj))
-      (unless (null (exists-task id))
-        (progn
-          (set-task-kill id)
-          (join-thread (get-task-thread id))))
-      (attach-task id task)
-      (regist-task id task)
-      (let ((task `(:obj ("message" . "alert_start")
-                         ("id" . ,id))))
-        (setf (jsown:val task "symbols") symbols)))))
+(defmethod treat-special-type ((task task-entity) &key id symbols &allow-other-keys)
+  ;; was check-task
+  (unless (null (exists-task id))
+    (set-task-kill id)
+    (join-thread (get-task-thread id)))
+  (attach-task id task)
+  (regist-task id task)
+  (let ((task `(:obj ("message" . "alert_start")
+                     ("id" . ,id))))
+    (setf (jsown:val task "symbols") symbols)
+    task))

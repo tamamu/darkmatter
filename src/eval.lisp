@@ -9,9 +9,7 @@
   (:import-from :darkmatter.pacman
                 :get-package
                 :make-temporary-package)
-  (:import-from :darkmatter.async
-                :check-task
-                :attach-runtask))
+  (:export :treat-special-type :*eval-preprocess*))
 (in-package :darkmatter.eval)
 
 (defmacro farguments (symbol)
@@ -40,7 +38,11 @@
       (t
        `(:obj ("type" . "symbol"))))))
 
-(defvar *eval-preprocess* '(attach-runtask))
+(defvar *eval-preprocess* '())
+
+(defgeneric treat-special-type (object &key &allow-other-keys))
+(defmethod treat-special-type ((object t) &key &allow-other-keys)
+  nil)
 
 (defun eval-string (path src cell id)
   (format t "Come: ~A~%" src)
@@ -73,7 +75,7 @@
           ($<standard-output> (get-output-stream-string *standard-output*))
           (*package* (find-package :darkmatter)))
       (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
-      (or (check-task return-value id symbols)
+      (or (treat-special-type return-value :id id :symbols symbols)
           `(:obj ("message" . "result")
                  ("return" . ,(escape-string (format nil "~A" return-value)))
                  ("symbols" . ,symbols)
