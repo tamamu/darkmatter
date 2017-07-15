@@ -9,10 +9,7 @@
   (:import-from :darkmatter.pacman
                 :get-package
                 :make-temporary-package)
-  (:import-from :darkmatter.async
-                :check-task
-                :attach-runtask
-                :attach-task-thread))
+  (:export :treat-special-type :*eval-preprocess*))
 (in-package :darkmatter.eval)
 
 (defmacro farguments (symbol)
@@ -41,16 +38,19 @@
       (t
        `(:obj ("type" . "symbol"))))))
 
+(defvar *eval-preprocess* '())
+
+(defgeneric treat-special-type (object &key &allow-other-keys))
+(defmethod treat-special-type ((object t) &key &allow-other-keys)
+  nil)
+
 (defun eval-string (path src cell id)
   (format t "Come: ~A~%" src)
   (let* ((standard-output *standard-output*)
          (*standard-output* (make-string-output-stream))
          (*error-output* (make-string-output-stream))
-         (pkg (or (get-package path)
-                  (let ((new-package (make-temporary-package path)))
-                    (cons new-package (package-name new-package)))))
-         (*package* (or (find-package (cdr pkg))
-                        (car pkg)))
+         (*package* (or (find-package (cdr (get-package path)))
+                        (make-temporary-package path)))
          (sexp nil)
          (symbols `(:obj))
          (return-value nil)
@@ -59,33 +59,28 @@
         (loop while pos
               do (multiple-value-setq (sexp pos)
                    (read-from-string src :eof-error-p t :start pos))
-                 (setf sexp (attach-runtask sexp))
+                 (loop for fun in *eval-preprocess*
+                       do (setf sexp (funcall fun sexp)))
                  (setf return-value (eval sexp))
-                 (when (symbolp return-value)
-                   (setf symbols
+              when (symbolp return-value)
+                do (setf symbols
                          (append symbols
                                  (list
                                   (cons (symbol-name return-value)
-                                        (symbol-detail return-value)))))))
+                                        (symbol-detail return-value))))))
       (end-of-file (c) nil)
       (error (c) (format t "<pre>~A</pre>" c)))
-    (setf (cdr (gethash path darkmatter.pacman:*local-packages*)) (package-name *package*))
+    (setf (get-package path) *package*)
     (let (($<error-output> (get-output-stream-string *error-output*))
           ($<standard-output> (get-output-stream-string *standard-output*))
           (*package* (find-package :darkmatter)))
       (format standard-output "Result:~A~%~A~%" return-value $<standard-output>)
-      (if-let (task (check-task id return-value))
-        (progn
-          (setf (jsown:val task "symbols") symbols)
-          task)
-        `(:obj ("message" . "result")
-          ("return" .
-           ,(escape-string (format nil "~A" return-value)))
-          ("symbols" . ,symbols)
-          ("output" .
-           ,(format nil "~A~A"
-                    (if (string= "" $<error-output>)
-                        ""
-                        (markup (:pre $<error-output>)))
-                    (string-left-trim '(#\Space #\Newline) $<standard-output>))))))))
-
+      (or (treat-special-type return-value :id id :symbols symbols)
+          `(:obj ("message" . "result")
+                 ("return" . ,(escape-string (format nil "~A" return-value)))
+                 ("symbols" . ,symbols)
+                 ("output" . ,(format nil "~A~A"
+                                      (if (string= "" $<error-output>)
+                                          ""
+                                          (markup (:pre $<error-output>)))
+                                      (string-left-trim '(#\Space #\Newline) $<standard-output>))))))))
