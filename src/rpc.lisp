@@ -10,28 +10,43 @@
   (:export :+rpcdef-list+))
 (in-package :darkmatter.eval.rpc)
 
+(defvar +rpcdef-list+
+  (list))
+
 (defmacro defrpc (name arglist &body body)
   "Define function as RPC."
   (let ((args (gensym "ARGS")))
-    `(defun ,name (,args)
-       (let ,(mapcar
-              (lambda (x)
-                (list x `(gethash ,(symbol-name x) ,args)))
-              arglist)
-         ,@body))))
+    `(progn
+       (defun ,name (,args)
+         (let ,(mapcar
+                (lambda (x)
+                  (list x `(gethash ,(symbol-name x) ,args)))
+                arglist)
+           ,@body))
+       (push (cons ,(symbol-name name) (function ,name))
+             +rpcdef-list+))))
 
-(defvar +rpcdef-list+
-  (list
-    '("darkmatter/initialize" . #'initialize)
-    '("darkmatter/eval" . #'eval-string)
-    '("darkmatter/initialize-package" . #'initialize-package)
-    '("darkmatter/get-share-object" . #'get-share-object)))
 
 (defvar *default-package-definition*
   (list :use '(:cl)))
 
+(defvar *using-package* nil)
 
-(defrpc initialize (|processId| |rootUri| |initializeOptions| |trace|)
+(defun initialize-package ()
+  "Make new package."
+  (let* ((magic (write-to-string (get-universal-time)))
+         (pkg (make-package (format nil "DARKMATTER.LOCAL.~A" magic)
+                            :use (getf *default-package-definition* :use))))
+    pkg))
+
+(defrpc |darkmatter/initializePackage| ()
+  "Call initialize-package.
+
+   * No response"
+  (%log "Init package")
+  (initialize-package))
+
+(defrpc |darkmatter/initialize| (|processId| |rootUri| |initializeOptions| |trace|)
   "Initialize darkmatter evaluation server.
    processId is the identifier for the instance of this program.
 
@@ -48,19 +63,75 @@
   (when |trace|
     (setf *trace-style* |trace|)))
 
-(defrpc eval-string ()
+(defun %log (output &key (stream *standard-output*))
+  (multiple-value-bind (sec min hour date mon year day dst-p tz)
+    (get-decoded-time)
+    (declare (ignore day dst-p tz))
+    (format stream "[~d/~d/~2,'0d] ~2,'0d:~2,'0d:~2,'0d~%~A~%"
+            year mon date hour min sec output)))
+
+(defun plist->hash (plist)
+  "convert plist to hash-table"
+  (let ((hash (make-hash-table :test #'equal)))
+    (loop for (key value) on plist by #'cddr while value
+          do (setf (gethash (symbol-name key) hash) value))
+    hash))
+
+(defun %hook-eval-string-before (sexp)
+  (identity sexp))
+
+(defun %hook-eval-string-after (return-value)
+  (identity return-value))
+
+(defun %hook-eval-string-finalize (return-value output-rendering cellId)
+  nil)
+
+(defrpc |darkmatter/eval| (|code| |outputRendering| |cellId|)
   "Evaluate the string from the editor.
 
    * Response result"
-  )
+  (%log (format nil "Eval: ~A" |code|))
 
-(defrpc initialize-package ()
-  "Initialize the package.
+  (let* ((*package* (or *using-package*
+                        (initialize-package)))
+         (server-output *standard-output*)
+         (*standard-output* (make-string-output-stream))
+         (*error-output* (make-string-output-stream))
+         (*trace-output* (make-string-output-stream))
+         (code-position 0)
+         (return-value nil)
+         (errorp nil))
 
-   * No response"
-  )
+    (handler-case
+      (loop while code-position
+            with sexp
+            do (multiple-value-setq (sexp code-position)
+                 (read-from-string |code| :eof-error-p t :start code-position))
+               (setf sexp (%hook-eval-string-before sexp)
+                     return-value (%hook-eval-string-after (eval sexp))))
+      (end-of-file (c) nil)
+      (error (c) (setf errorp t)
+                 (write c)))
 
-(defrpc get-share-object ()
+    (setf *using-package* *package*)
+    (let* ((standard-output (get-output-stream-string *standard-output*))
+           (error-output (get-output-stream-string *error-output*))
+           (trace-output (get-output-stream-string *trace-output*))
+           (all-output (format nil "~A~A~A"
+                       trace-output
+                       error-output
+                       standard-output))
+           (*package* (find-package :darkmatter.eval.rpc)))
+
+      (%log (format nil "Result: ~A~%~A" return-value all-output) :stream server-output)
+
+      (%hook-eval-string-finalize return-value |outputRendering| |cellId|)
+      (plist->hash
+        `(:|returnValue| ,(write-to-string return-value)
+          :|output| ,all-output)))))
+
+
+(defrpc |darkmatter/getShareObject| ()
   "Get a share object of the asynchronous task of the id.
 
    * Response object"
