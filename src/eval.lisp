@@ -18,4 +18,4 @@
                       (cdr rpcdef)))
   +rpcdef-list+)
 
-(jsonrpc:server-listen *server* :port 50879 :mode :tcp)
+(jsonrpc:server-listen *server* :port 50879 :mode :websocket)
