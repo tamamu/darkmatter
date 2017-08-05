@@ -7,11 +7,32 @@
 (in-package :cl-user)
 (defpackage darkmatter.eval.rpc
   (:use :cl)
-  (:export :+rpcdef-list+))
+  (:export :+rpcdef-list+
+           :hook-eval-string-before
+           :hook-eval-string-after
+           :hook-eval-string-finalize))
 (in-package :darkmatter.eval.rpc)
 
 (defvar +rpcdef-list+
   (list))
+
+(defvar *eval-string-before-hooks*
+  (list #'identity))
+
+(defvar *eval-string-after-hooks*
+  (list #'identity))
+
+(defvar *eval-string-finalize-hooks*
+  (list))
+
+(defun hook-eval-string-before (hook)
+  (push hook *eval-string-before-hooks*))
+
+(defun hook-eval-string-after (hook)
+  (push hook *eval-string-after-hooks*))
+
+(defun hook-eval-string-finalize (hook)
+  (push hook *eval-string-finalize-hooks*))
 
 (defmacro defrpc (name arglist &body body)
   "Define function as RPC."
@@ -78,13 +99,20 @@
     hash))
 
 (defun %hook-eval-string-before (sexp)
-  (identity sexp))
+  (reduce #'funcall
+          *eval-string-before-hooks*
+          :initial-value sexp
+          :from-end t))
 
 (defun %hook-eval-string-after (return-value)
-  (identity return-value))
+  (reduce #'funcall
+          *eval-string-after-hooks*
+          :initial-value sexp
+          :from-end t))
 
 (defun %hook-eval-string-finalize (return-value output-rendering cellId)
-  nil)
+  (dolist (hook *eval-string-finalize-hooks*)
+    (funcall hook return-value output-rendering cellId)))
 
 (defrpc |darkmatter/eval| (|code| |outputRendering| |cellId|)
   "Evaluate the string from the editor.
