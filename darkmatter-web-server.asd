@@ -23,8 +23,9 @@
   :components ((:module "src"
                 :components
                 ((:file "web" :depends-on ("handle"))
-                 (:file "handle" :depends-on ("render"))
-                 (:file "render"))))
+                 (:file "handle" :depends-on ("render" "user"))
+                 (:file "render" :depends-on ("user"))
+                 (:file "user"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

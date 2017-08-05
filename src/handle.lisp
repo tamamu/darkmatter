@@ -7,6 +7,8 @@
 (in-package :cl-user)
 (defpackage darkmatter.web.handle
   (:use :cl)
+  (:import-from :darkmatter-user
+                :*plugin-handler*)
   (:import-from :darkmatter.web.render
                 :notfound
                 :render-index
@@ -36,15 +38,27 @@
   "Handle GET requests"
   (let ((uri (url-decode (getf env :request-uri))))
     (starts-case (getf env :request-uri)
-      ("/browse/" (lambda (path) (=>browse env path)))
-      ("/plugin/" (lambda (path) (=>plugin env path)))
-      ("/" (lambda (path) (=>root env path)))
+      ("/browse/" (lambda (path) (/browse/=> env path)))
+      ("/plugin/" (lambda (path) (/plugin/=> env path)))
+      ("/" (lambda (path) (/=> env path)))
       (otherwise (notfound env)))))
 
-(defun =>browse (env path)
+(defun /browse/=> (env path)
   )
 
-(defun =>plugin (env path)
+(defun /plugin/=> (env path)
+  (with-hash-table-iterator
+    (generator-fn *plugin-handler*)
+    (loop
+      (multiple-value-bind (more? key handler)
+        (generator-fn)
+        (unless more? (return (notfound env)))
+        (multiple-value-bind (match? plugin-path)
+          (starts-with-subseq key path :return-suffix t)
+          (when match?
+            (return (funcall handler env plugin-path))))))))
+
+(defun /=> (env path)
   )
 
 (defun ->put (env)
