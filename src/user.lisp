@@ -8,10 +8,10 @@
 (defpackage darkmatter-user
   (:use :cl)
   (:nicknames :dm-user)
-  (:import-from :darkmatter.eval.rpc
-                :hook-eval-string-before
-                :hook-eval-string-after
-                :hook-eval-string-finalize)
+;  (:import-from :darkmatter.eval.rpc
+;                :hook-eval-string-before
+;                :hook-eval-string-after
+;                :hook-eval-string-finalize)
   (:export :*plugin-handler*
            :*plugin-scripts*))
 (in-package :darkmatter-user)
