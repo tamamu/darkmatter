@@ -19,7 +19,8 @@
   :depends-on (:clack
                :quri
                :djula
-               :alexandria)
+               :alexandria
+               :yason)
   :components ((:module "src"
                 :components
                 ((:file "web" :depends-on ("handle"))

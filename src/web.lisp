@@ -17,7 +17,7 @@
 (in-package :darkmatter.web)
 
 (defvar *root-directory*
-  (asdf:system-relative-pathname "darkmatter.web" #P"app.lisp"))
+  (asdf:system-relative-pathname "darkmatter-web-server" #P"app.lisp"))
 
 (defparameter *web*
   (lambda (env)

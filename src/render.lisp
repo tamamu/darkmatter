@@ -17,7 +17,7 @@
 
 
 (djula:add-template-directory
-  (asdf:system-relative-pathname "darkmatter.web" "templates/"))
+  (asdf:system-relative-pathname "darkmatter-web-server" "templates/"))
 
 (defvar +index.html+ (djula:compile-template* "index.html"))
 (defvar +files.html+ (djula:compile-template* "files.html"))
@@ -33,15 +33,15 @@
 
 (defun notfound (env)
   `(404 (:content-type "text/html")
-    ,(render-template* +404.html+ nil)))
+    (,(djula:render-template* +404.html+ nil))))
 
 (defun render-index (env)
   `(200 (:content-type "text/html")
-    ,(render-template* +index.html+ nil)))
+    (,(djula:render-template* +index.html+ nil))))
 
 (defun render-files (env path)
   `(200 (:content-type "text/html")
-    ,(render-template* +files.html+ nil)))
+    (,(djula:render-template* +files.html+ nil))))
 
 (defun render-notebook (env path)
   (let ((fp (probe-file path)))
@@ -53,11 +53,11 @@
               (setf cells (rest cells))
               (setf cells nil))))
       `(200 (:content-type "text/html")
-        (,(render-template* +notebook.html+ nil
-                            :cells cells
-                            :root (directory-namestring path)
-                            :host (getf env :server-name)
-                            :port (getf env :server-port)
-                            :path path
-                            :plugins *plugin-scripts*
-                            :token (write-to-string (get-universal-time))))))))
+        (,(djula:render-template* +notebook.html+ nil
+                                  :cells cells
+                                  :root (directory-namestring path)
+                                  :host (getf env :server-name)
+                                  :port (getf env :server-port)
+                                  :path path
+                                  :plugins *plugin-scripts*
+                                  :token (write-to-string (get-universal-time))))))))

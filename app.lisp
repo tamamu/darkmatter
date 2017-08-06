@@ -1,11 +1,10 @@
-(ql:quickload :darkmatter)
+(ql:quickload :darkmatter-web-server)
 
 (in-package :cl-user)
-(defpackage darkmatter.app
+(defpackage darkmatter.web.app
   (:use :cl)
-  (:import-from :darkmatter
-                :*eval-server*))
-(in-package :darkmatter.app)
+  (:import-from :darkmatter.web
+                :*web*))
+(in-package :darkmatter.web.app)
 
-;(clack:clackup *eval-server* :server :woo :port 8888)
-*eval-server*
+*web*
