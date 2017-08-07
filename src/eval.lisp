@@ -6,7 +6,8 @@
 
 (in-package :cl-user)
 (defpackage darkmatter.eval
-  (:use :cl :darkmatter.eval.rpc))
+  (:use :cl :darkmatter.eval.rpc)
+  (:export :start))
 (in-package :darkmatter.eval)
 
 (defvar *server* (jsonrpc:make-server))
@@ -18,4 +19,5 @@
                       (cdr rpcdef)))
   +rpcdef-list+)
 
-(jsonrpc:server-listen *server* :port 50879 :mode :websocket)
+(defun start ()
+  (jsonrpc:server-listen *server* :mode :websocket))
