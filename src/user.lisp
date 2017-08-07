@@ -13,7 +13,8 @@
 ;                :hook-eval-string-after
 ;                :hook-eval-string-finalize)
   (:export :*plugin-handler*
-           :*plugin-scripts*))
+           :*plugin-scripts*
+           :*plugin-methods*))
 (in-package :darkmatter-user)
 
 (defvar *plugin-handler*
@@ -21,6 +22,9 @@
 
 (defvar *plugin-scripts*
   (list))
+
+(defvar *plugin-methods*
+  (make-hash-table :test #'equalp))
 
 (defun regist-plugin-handler (name handler)
   (setf (gethash name *plugin-handler*)
