@@ -10,8 +10,9 @@ const EvalClientError = {
 
 class EvalClient {
 
-  constructor(masterURI, clientId, websocket = false) {
+  constructor(masterURI, clientId, descripter, websocket = true) {
     this.id = clientId;
+    this.descripter = descripter;
     this.enableWebSocket = websocket;
     this.ws = null;
     this.evalURI = null;
@@ -19,35 +20,39 @@ class EvalClient {
     this.token = null;
   }
 
-  static makeRequest(method, params, id = null) {
+  static makeRequest(method, params, clientId = null) {
     return JSON.stringify({
       "jsonrpc": "2.0",
       "method": method,
       "params": params,
-      "id": id
+      "id": clientId
     });
   }
 
-  static makeServerMessage(clientId, websocket) {
+  static makeServerMessage(clientId, descripter, websocket) {
     return JSON.stringify({
-      "method": "makeServer",
+      "id": clientId,
+      "method": "darkmatter/makeServer",
       "params": {
         "enableWebSocket": websocket,
-        "clientId": clientId
+        "descripter": descripter
       }
     });
   }
 
   makeServer() {
-    console.log("[->] Make eval-server...");
+    console.log("[->] Make eval-server... " + this.masterURI);
+    let message = EvalClient.makeServerMessage(this.id, this.descripter, this.enableWebSocket);
     return new Promise((resolve, reject) => {
-      http.put(this.masterURI, EvalClient.makeServerMessage(this.id, this.enableWebSocket))
+      http.put(this.masterURI, message)
         .then(json => {
-          this.evalURI = json.uri;
+          let result = json.result;
+          this.evalURI = `ws://${SERVER_HOST}:${result.port}`;
           this.token = json.token;
           resolve();
         })
         .catch(err => {
+          console.log(err);
           reject(EvalClientError.UNMAKABLE_SERVER);
         });
     });
@@ -122,7 +127,9 @@ class EvalClient {
         if (err == EvalClientError.DEAD_SERVER) {
           this.makeServer()
             .then(() => {
-              setTimeout(100, this.requestUntilSuccessful, request, trueResolve, trueReject);
+              console.log("[Success] Make eval server at " + this.evalURI);
+              //setTimeout(100, this.requestUntilSuccessful, request, trueResolve, trueReject);
+              this.requestUntilSuccessful(request, trueResolve, trueReject);
             })
             .catch(err => {
               console.log("[Error] Unmakable server");
