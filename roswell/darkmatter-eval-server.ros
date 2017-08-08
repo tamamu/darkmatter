@@ -1,0 +1,19 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| <Put a one-line description here>
+exec ros -Q --load darkmatter-eval-server.asd -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (require :darkmatter-eval-server)
+  ;;#+quicklisp (ql:quickload '() :silent t)
+  )
+
+(defpackage :ros.script.darkmatter-eval-server.3711117109
+  (:use :cl))
+(in-package :ros.script.darkmatter-eval-server.3711117109)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (darkmatter.eval:start))
+;;; vim: set ft=lisp lisp:

@@ -7,7 +7,7 @@
 (in-package :cl-user)
 (defpackage darkmatter.web.render
   (:use :cl)
-  (:import-from :darkmatter-user
+  (:import-from :darkmatter.web.user
                 :*plugin-scripts*)
   (:export :notfound
            :render-index

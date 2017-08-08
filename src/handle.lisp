@@ -7,9 +7,11 @@
 (in-package :cl-user)
 (defpackage darkmatter.web.handle
   (:use :cl)
-  (:import-from :darkmatter-user
+  (:import-from :darkmatter.web.user
                 :*plugin-handler*
                 :*plugin-methods*)
+  (:import-from :darkmatter.settings
+                :*plugins*)
   (:import-from :darkmatter.web.render
                 :notfound
                 :render-index
@@ -120,6 +122,7 @@
    * /plugin/
    * /"
   (let ((uri (url-decode (getf env :request-uri))))
+    (format t "[GET] ~A~%" uri)
     (starts-case uri
       `(("/browse/" ,(lambda (path) (get/browse/ env path)))
         ("/plugin/" ,(lambda (path) (get/plugin/ env path)))
@@ -140,16 +143,23 @@
    * /plugin/     Using plugins list
    * /plugin/*/   Plugin detail
    * /plugin/*/*  Plugin file"
-  (with-hash-table-iterator
-    (generator-fn *plugin-handler*)
-    (loop
-      (multiple-value-bind (more? key handler)
-        (generator-fn)
-        (unless more? (return (notfound env)))
-        (multiple-value-bind (match? plugin-path)
-          (starts-with-subseq key path :return-suffix t)
-          (when match?
-            (return (funcall handler env plugin-path))))))))
+  (if (= (length path) 0)
+      `(200 (:content-type "text/html")
+        (,(format nil "~A" *plugins*)))
+      (with-hash-table-iterator
+        (generator-fn *plugin-handler*)
+        (loop
+          (multiple-value-bind (more? plugin-name handler)
+            (generator-fn)
+            (unless more? (return (notfound env)))
+            (multiple-value-bind (match? rest-path)
+              (starts-with-subseq (format nil "~A/" plugin-name) path :return-suffix t)
+              (format t "[~A] ~A(~A)~%" plugin-name path rest-path)
+              (when match?
+                (if (= (length rest-path) 0)
+                    (return `(200 (:content-type "text/html") (,(format nil "~A" plugin-name))))
+                    (let ((response (funcall handler env rest-path)))
+                      (return (or response (notfound env))))))))))))
 
 (defun get/ (env path)
   "Send index to client"
@@ -180,13 +190,16 @@
   (with-hash-table-iterator
     (generator-fn *plugin-methods*)
       (loop
-        (multiple-value-bind (more? key method)
+        (multiple-value-bind (more? key plugin-entry)
           (generator-fn)
-          (unless more? (return (emit-error id :method-not-found)))
+          (unless more? (return (emit-error id :invalid-request)))
           (multiple-value-bind (match? plugin-path)
             (starts-with-subseq key path :return-suffix t)
             (when match?
-              (return (funcall method env plugin-path params))))))))
+              (let ((method (gethash method plugin-entry)))
+                (if method
+                    (return (emit-response id (funcall method params)))
+                    (return (emit-error id :method-not-found))))))))))
 
 (defun put/ (env path id method params)
   "Send procedure result as JSON
