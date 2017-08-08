@@ -7,32 +7,22 @@
 (in-package :cl-user)
 (defpackage darkmatter.eval.rpc
   (:use :cl)
+  (:import-from :darkmatter.settings
+                :*plugins*
+                :load-eval-plugins)
+  ;(:import-from :darkmatter-hooks
+  (:import-from :darkmatter.eval.user
+                :*eval-string-before-hooks*
+                :*eval-string-after-hooks*
+                :*eval-string-finalize-hooks*)
   (:export :+rpcdef-list+
-           :hook-eval-string-before
-           :hook-eval-string-after
-           :hook-eval-string-finalize))
+           :*eval-string-before-hooks*
+           :*eval-string-after-hooks*
+           :*eval-string-finalize-hooks*))
 (in-package :darkmatter.eval.rpc)
 
 (defvar +rpcdef-list+
   (list))
-
-(defvar *eval-string-before-hooks*
-  (list #'identity))
-
-(defvar *eval-string-after-hooks*
-  (list #'identity))
-
-(defvar *eval-string-finalize-hooks*
-  (list))
-
-(defun hook-eval-string-before (hook)
-  (push hook *eval-string-before-hooks*))
-
-(defun hook-eval-string-after (hook)
-  (push hook *eval-string-after-hooks*))
-
-(defun hook-eval-string-finalize (hook)
-  (push hook *eval-string-finalize-hooks*))
 
 (defmacro defrpc (name arglist &body body)
   "Define function as RPC."
@@ -47,6 +37,7 @@
        (push (cons ,(symbol-name name) (function ,name))
              +rpcdef-list+))))
 
+(defvar *trace-style* :default)
 
 (defvar *default-package-definition*
   (list :use '(:cl)))
@@ -72,11 +63,12 @@
    processId is the identifier for the instance of this program.
 
    * No response"
-  (let ((plugins (gethash |plugins| |initializeOptions|)))
-    (when plugins
-      (mapcar #'load plugins)))
+  ;(let ((plugins (gethash |plugins| |initializeOptions|)))
+  ;  (when plugins
+  ;    (mapcar #'load plugins)))
+  (load-eval-plugins)
 
-  (let ((default-package (gethash |defaultPackage| |initializeOptions|)))
+  (let ((default-package (gethash :|defaultPackage| |initializeOptions|)))
     (when default-package
       (setf (getf *default-package-definition* :use)
             default-package)))
@@ -107,7 +99,7 @@
 (defun %hook-eval-string-after (return-value)
   (reduce #'funcall
           *eval-string-after-hooks*
-          :initial-value sexp
+          :initial-value return-value
           :from-end t))
 
 (defun %hook-eval-string-finalize (return-value output-rendering cellId)
