@@ -16,11 +16,14 @@
            :hook-eval-string-finalize))
 (in-package :darkmatter.eval.user)
 
+(defun %identity (first &rest rest)
+  first)
+
 (defvar *eval-string-before-hooks*
-  (list #'identity))
+  (list #'%identity))
 
 (defvar *eval-string-after-hooks*
-  (list #'identity))
+  (list #'%identity))
 
 (defvar *eval-string-finalize-hooks*
   (list))

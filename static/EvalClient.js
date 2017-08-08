@@ -146,11 +146,12 @@ class EvalClient {
     });
   }
 
-  eval(code, cellId, outputRendering = true) {
+  eval(code, cellId, outputRendering = true, optional = null) {
     const request = EvalClient.makeRequest('darkmatter/eval', {
       code: code,
       outputRendering: outputRendering,
-      cellId: cellId
+      cellId: cellId,
+      optional: optional
     }, this.id);
     return this.request(request);
   }

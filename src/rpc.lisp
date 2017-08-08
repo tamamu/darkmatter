@@ -90,23 +90,25 @@
           do (setf (gethash (symbol-name key) hash) value))
     hash))
 
-(defun %hook-eval-string-before (sexp)
-  (reduce #'funcall
+(defun %hook-eval-string-before (sexp optional)
+  (reduce (lambda (hook sexp)
+            (funcall hook sexp optional))
           *eval-string-before-hooks*
           :initial-value sexp
           :from-end t))
 
-(defun %hook-eval-string-after (return-value)
-  (reduce #'funcall
+(defun %hook-eval-string-after (return-value optional)
+  (reduce (lambda (hook return-value)
+            (funcall hook return-value optional))
           *eval-string-after-hooks*
           :initial-value return-value
           :from-end t))
 
-(defun %hook-eval-string-finalize (return-value output-rendering cellId)
+(defun %hook-eval-string-finalize (return-value output-rendering cellId optional)
   (dolist (hook *eval-string-finalize-hooks*)
-    (funcall hook return-value output-rendering cellId)))
+    (funcall hook return-value output-rendering cellId optional)))
 
-(defrpc |darkmatter/eval| (|code| |outputRendering| |cellId|)
+(defrpc |darkmatter/eval| (|code| |outputRendering| |cellId| |optional|)
   "Evaluate the string from the editor.
 
    * Response result"
@@ -127,8 +129,8 @@
             with sexp
             do (multiple-value-setq (sexp code-position)
                  (read-from-string |code| :eof-error-p t :start code-position))
-               (setf sexp (%hook-eval-string-before sexp)
-                     return-value (%hook-eval-string-after (eval sexp))))
+               (setf sexp (%hook-eval-string-before sexp |optional|)
+                     return-value (%hook-eval-string-after (eval sexp) |optional|)))
       (end-of-file (c) nil)
       (error (c) (setf errorp t)
                  (write c)))
@@ -145,7 +147,7 @@
 
       (%log (format nil "Result: ~A~%~A" return-value all-output) :stream server-output)
 
-      (%hook-eval-string-finalize return-value |outputRendering| |cellId|)
+      (%hook-eval-string-finalize return-value |outputRendering| |cellId| |optional|)
       (plist->hash
         `(:|returnValue| ,(write-to-string return-value)
           :|output| ,all-output)))))
