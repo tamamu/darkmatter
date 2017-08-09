@@ -8,13 +8,12 @@
 (defpackage darkmatter.eval.rpc
   (:use :cl)
   (:import-from :darkmatter.settings
-                :*plugins*
-                :load-eval-plugins)
-  ;(:import-from :darkmatter-hooks
+                :*plugins*)
   (:import-from :darkmatter.eval.user
                 :*eval-string-before-hooks*
                 :*eval-string-after-hooks*
-                :*eval-string-finalize-hooks*)
+                :*eval-string-finalize-hooks*
+                :load-eval-plugins)
   (:export :+rpcdef-list+
            :*eval-string-before-hooks*
            :*eval-string-after-hooks*

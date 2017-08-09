@@ -8,12 +8,15 @@
 (defpackage darkmatter.eval.user
   (:use :cl)
   (:nicknames :dm-eval-user)
+  (:import-from :darkmatter.settings
+                :*plugins*)
   (:export :*eval-string-before-hooks*
            :*eval-string-after-hooks*
            :*eval-string-finalize-hooks*
            :hook-eval-string-before
            :hook-eval-string-after
-           :hook-eval-string-finalize))
+           :hook-eval-string-finalize
+           :load-eval-plugins))
 (in-package :darkmatter.eval.user)
 
 (defun %identity (first &rest rest)
@@ -36,3 +39,8 @@
 
 (defun hook-eval-string-finalize (hook)
   (push hook *eval-string-finalize-hooks*))
+
+(defun load-eval-plugins ()
+  (mapcar (lambda (plugin)
+            (require (format nil "~A-eval" plugin)))
+          *plugins*))

@@ -6,10 +6,8 @@
 
 (in-package :cl-user)
 (defpackage darkmatter.settings
-  (:use :cl :dm-eval-user :dm-web-user)
-  (:export :*plugins*
-           :load-web-plugins
-           :load-eval-plugins))
+  (:use :cl)
+  (:export :*plugins*))
 (in-package :darkmatter.settings)
 
 (defparameter *plugins*
@@ -19,14 +17,3 @@
   (if (probe-file path)
       (load path)))
 
-(mapcar #'require *plugins*)
-
-(defun load-web-plugins ()
-  (mapcar (lambda (system)
-            (load (format nil "~A.web" system)))
-          *plugins*))
-
-(defun load-eval-plugins ()
-  (mapcar (lambda (system)
-            (load (format nil "~A.eval" system)))
-          *plugins*))

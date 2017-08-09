@@ -20,10 +20,10 @@
   :components ((:module "src"
                 :components
                 ((:file "eval" :depends-on ("rpc"))
-                 (:file "rpc" :depends-on ("eval-user" "settings"))
-                 (:file "settings" :depends-on ("eval-user" "web-user"))
-                 (:file "eval-user")
-                 (:file "web-user"))))
+                 (:file "rpc" :depends-on ("eval-user"))
+                 (:file "settings" :depends-on ("utils"))
+                 (:file "eval-user" :depends-on ("settings"))
+                 (:file "utils"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
