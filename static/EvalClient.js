@@ -8,6 +8,8 @@ const EvalClientError = {
   DEAD_SERVER: Symbol("Dead server")
 };
 
+const SERVER_HOST = 'localhost';
+
 class EvalClient {
 
   constructor(masterURI, clientId, descripter, websocket = true) {

@@ -9,9 +9,12 @@
   (:use :cl)
   (:import-from :darkmatter.web.user
                 :*plugin-handler*
-                :*plugin-methods*)
+                :*plugin-methods*
+                :load-web-plugins)
   (:import-from :darkmatter.settings
                 :*plugins*)
+  (:import-from :darkmatter.utils
+                :starts-case)
   (:import-from :darkmatter.web.render
                 :notfound
                 :render-index
@@ -26,6 +29,8 @@
            :->get
            :->put))
 (in-package :darkmatter.web.handle)
+
+(load-web-plugins)
 
 (defparameter +launch-eval-server+
   ;"ros run --load darkmatter-eval-server.asd -e \"(require :darkmatter-eval-server)\""
@@ -88,15 +93,6 @@
             message
             id))))
 
-(defun starts-case (keyform cases)
-  "Call the function with subsequence if the given string starts with pattern within cases."
-  (dolist (case cases)
-    (destructuring-bind (pattern matched) case
-      (if (eq pattern 'otherwise)
-          (return (funcall matched keyform))
-          (multiple-value-bind (match-p remain)
-            (starts-with-subseq pattern keyform :return-suffix t)
-            (when match-p (return (funcall matched remain))))))))
 
 (defun %emit-json (status json-string)
   `(,status (:content-type "application/json") (,json-string)))
@@ -156,10 +152,8 @@
               (starts-with-subseq (format nil "~A/" plugin-name) path :return-suffix t)
               (format t "[~A] ~A(~A)~%" plugin-name path rest-path)
               (when match?
-                (if (= (length rest-path) 0)
-                    (return `(200 (:content-type "text/html") (,(format nil "~A" plugin-name))))
-                    (let ((response (funcall handler env rest-path)))
-                      (return (or response (notfound env))))))))))))
+                (let ((response (funcall handler env rest-path)))
+                  (return (or response (notfound env)))))))))))
 
 (defun get/ (env path)
   "Send index to client"
