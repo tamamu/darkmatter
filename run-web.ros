@@ -1,0 +1,23 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| <Put a one-line description here>
+exec ros -Q --load darkmatter-web-server.asd -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (require :darkmatter-web-server)
+  (require :clack)
+  ;;#+quicklisp (ql:quickload '() :silent t)
+  )
+
+(defpackage :ros.script.foo.3711115193
+  (:use :cl :clack))
+(in-package :ros.script.foo.3711115193)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (clack:clackup darkmatter.web::*web*
+                 :port 8888
+                 :use-thread nil
+                 :interrupt-handler (lambda () (darkmatter.web::kill-all-process))))
+;;; vim: set ft=lisp lisp:
