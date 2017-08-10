@@ -23,16 +23,20 @@ class EvalClient {
   }
 
   static makeRequest(method, params, clientId = null) {
-    return JSON.stringify({
+    let object = {
       "jsonrpc": "2.0",
       "method": method,
       "params": params,
-      "id": clientId
-    });
+    };
+    if (clientId != null) {
+      object.id = clientId;
+    }
+    return JSON.stringify(object);
   }
 
   static makeServerMessage(clientId, descripter, websocket) {
     return JSON.stringify({
+      "jsonrpc": "2.0",
       "id": clientId,
       "method": "darkmatter/makeServer",
       "params": {
@@ -118,7 +122,7 @@ class EvalClient {
     let proc = this.enableWebSocket ? this.sendWS.bind(this) : this.sendTCP.bind(this) ;
     proc(request)
       .then(json => {
-        if (json.id !== this.id) {
+        if (json.id && json.id !== this.id) {
           trueReject(new Error("INVALID_ID"));
         } else {
           trueResolve(json);
@@ -146,6 +150,17 @@ class EvalClient {
     return new Promise((resolve, reject) => {
       this.requestUntilSuccessful(request, resolve, reject);
     });
+  }
+
+  initialize(plugins, defaultPackage, trace) {
+    const request = EvalClient.makeRequest('darkmatter/initialize', {
+      initializeOptions: {
+        plugins: plugins,
+        defaultPackage: defaultPackage
+      },
+      trace: trace
+    }, this.id);
+    return this.request(request);
   }
 
   eval(code, cellId, outputRendering = true, optional = null) {

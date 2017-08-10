@@ -16,7 +16,8 @@
   :version "1.0.0"
   :author "Eddie"
   :license "MIT"
-  :depends-on (:jsonrpc)
+  :depends-on (:jsonrpc
+               :alexandria)
   :components ((:module "src"
                 :components
                 ((:file "eval" :depends-on ("rpc"))
