@@ -1,161 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-	<meta charset="UTF-8">
-  <title>Darkmatter | {{ path }}</title>
-	<script>
-    const ROOT_DIR = "{{ root }}";
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <script src="/static/HttpRequest.js"></script>
+  <script src="/static/EvalClient.js"></script>
+  <script>
+    const TOKEN = "8Pubhf8XQcI=";
     const SERVER_HOST = "{{ host }}";
-    const SERVER_PORT = "{{ port }}";
-		const LS_URI = `ws://${SERVER_HOST}:${SERVER_PORT}`;
-    const HTTP_URI = `http://${SERVER_HOST}:${SERVER_PORT}`;
-    const CD_URI = `${HTTP_URI}/${ROOT_DIR}`;
-    const FILE_PATH = "{{ path }}";
-    const TOKEN = "{{ token }}";
-    const LAZY_LOAD = true;
-	</script>
-	<script src="/static/components/d3/d3.min.js"></script>
-  <script src="/static/components/ace/ace.js"></script>
-  <script src="/static/components/ace/ext-language_tools.js"></script>
-  <script src="/static/components/katex/katex.min.js"></script>
-  <script src="/static/components/marked/marked.min.js"></script>
-  <script src="/static/components/ace.improved/lib/ace.improvements.js"></script>
-  <script src="/static/components/ace.improved/lib/ace.ext.keys.js"></script>
-  <script src="/static/components/ace.improved/lib/ace.ext.lang.ast-commands.js"></script>
-  <script src="/static/components/ace.improved/lib/ace.ext.lang.codemarker.js"></script>
-  <script src="/static/components/paredit.js/paredit-bundle.min.js"></script>
-  <script src="/static/components/paredit.js/examples/ace.ext.lang.paredit.js"></script>
-  <script src="/static/KeyBinder.js"></script>
-  <script src="/static/LispSocket.js"></script>
-  <script src="/static/SymbolManager.js"></script>
-  <script src="/static/Cell.js"></script>
-  <script src="/static/Renderer.js"></script>
-  <script src="/static/ResultParser.js"></script>
-  <script src="/static/LispRenderer.js"></script>
-  <script src="/static/MDRenderer.js"></script>
-  <script src="/static/AlertSocket.js"></script>
-  <script src="/static/Utils.js"></script>
-  <script src="/static/Slide.js"></script>
-  <script src="/static/startup.js"></script>
-  {% for plugin in plugins %}
-  <script src="/plugin/{{ plugin.name }}/{{ plugin.path }}"></script>
-  {% endfor %}
-  <link rel="stylesheet" href="/static/components/katex/katex.min.css">
-  <link rel="stylesheet" href="/static/editcell.css">
-  <link rel="stylesheet" href="/static/ui.css">
- </head>
- <body unresolved>
-
-  <header>
-    <h1>Darkmatter Notebook</h1>
-    <p id="alert" class="right"></p>
-  </header>
-
-  <nav>
-    <ul id="menubar">
-      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-file">
-        <label for="menu-file">File</label>
-        <ul class="submenu">
-          <li class="keybind" data-key="Ctrl-s"
-            onclick="saveFile();">Save</li>
-          <li class="keybind" data-key="Ctrl-r"
-            onclick="Socket.recall();">Recall package</li>
-        </ul>
-      </li>
-
-      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-cell">
-        <label for="menu-cell">Cell</label>
-        <ul class="submenu">
-          <li class="keybind" data-key="Ctrl-Enter"
-            onclick="evalCurrent();">Eval</li>
-          <li class="keybind" data-key="Shift-Enter"
-            onclick="evalCurrentForward();">Eval and next</li>
-          <li class="keybind" data-key="Ctrl-i"
-            onclick="changeLangCurrent();">Change language</li>
-          <li class="keybind" data-key="Ctrl-Up"
-            onclick="focusPrevCell();">Select previous</li>
-          <li class="keybind" data-key="Ctrl-Down"
-            onclick="focusNextCell();">Select next</li>
-          <li class="keybind" data-key="Shift-Ctrl-Up"
-            onclick="swapToPrevCell();">Swap to previous</li>
-          <li class="keybind" data-key="Shift-Ctrl-Down"
-            onclick="swapToNextCell();">Swap to next</li>
-          <li class="keybind" data-key="Ctrl-p"
-            onclick="prependCellCurrent();">Preend</li>
-          <li class="keybind" data-key="Ctrl-b"
-            onclick="appendCellCurrent();">Append</li>
-          <li class="keybind" data-key="Ctrl-Delete"
-            onclick="removeCurrent();">Remove</li>
-        </ul>
-      </li>
-
-      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-view">
-        <label for="menu-view">View</label>
-        <ul class="submenu">
-          <li class="keybind" data-key="Ctrl-d"
-            onclick="toggleDrawer()">Toggle drawer</li>
-          <li class="keybind" data-key="Ctrl-F5"
-            onclick="startSlideMode()">Start slide mode</li>
-        </ul>
-      </li>
-
-      <li><input class="hidden" type="checkbox" name="menuitem" id="menu-tools">
-        <label for="menu-tools">Tools</label>
-        <ul class="submenu">
-          <li class="keybind" data-key="Ctrl-F9"
-            onclick="evalAllCells();">Eval all cells</li>
-          <li class="keybind" data-key="Shift-Ctrl-v"
-            onclick="setKeyBind('vim');">Vim mode</li>
-          <li class="keybind" data-key="Shift-Ctrl-e"
-            onclick="setKeyBind('emacs');">Emacs mode</li>
-          <li class="keybind" data-key="Shift-Ctrl-d"
-            onclick="setKeyBind()">Default mode</li>
-        </ul>
-      </li>
-
-    </ul>
-
-  </nav>
-
-  <div class="slide-controller keybind" data-key="ESC" data-global id="exit" onclick="exitSlideMode();"> X </div>
-  <div class="slide-controller keybind" data-key="Left" data-global id="left" onclick="prevSlide();"> Back </div>
-  <div class="slide-controller keybind" data-key="Right" data-global id="right" onclick="nextSlide();"> Next </div>
-
-  <div class="contents">
-    <div id="drawer">
-      <div id="symbols">
-        <ul>
-          <li>
-            <p>Function</p>
-            <ul id="function"></ul>
-          </li>
-          <li>
-            <p>Macro</p>
-            <ul id="macro"></ul>
-          </li>
-          <li>
-            <p>Class</p>
-            <ul id="class"></ul>
-          </li>
-          <li>
-            <p>Variable</p>
-            <ul id="variable"></ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div id="dm-container">
-      {% for data in editcells %}
-      <div class="cell" id="{{ data.id }}" data-count="{{ data.count }}" data-next="{{ data.next }}" data-before="{{ data.before }}" data-lang="{{ data.lang }}">
-        <div id="lisp" class="cache" data-content="{{ data.lisp }}"></div>
-        <div id="md" class="cache" data-content="{{ data.md }}"></div>
-        <div id="editor"></div>
-        <div id="output" {% ifnotequal data.output "" %}class="show"{% endifnotequal %}>{{ data.output | safe }}</div>
-      </div>
-      {% endfor %}
-    </div>
-   </div>
-
+    const DESCRIPTER = "{{ token }}:{{ path }}";
+    let c = new EvalClient('http://{{ host }}:{{ port }}', TOKEN, DESCRIPTER, true);
+    let code = "(print *package*)";
+    c.eval(code, "cell2")
+     .then(result => console.log(result))
+     .catch(err => console.log(err));
+  </script>
 </body>
 </html>
