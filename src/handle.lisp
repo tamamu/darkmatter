@@ -24,6 +24,8 @@
                 :url-decode)
   (:import-from :alexandria
                 :starts-with-subseq
+                :plist-hash-table
+                :hash-table-plist
                 :switch)
   (:export :kill-all-process
            :->get
@@ -35,6 +37,12 @@
 (defparameter +launch-eval-server+
   ;"ros run --load darkmatter-eval-server.asd -e \"(require :darkmatter-eval-server)\""
   "./roswell/darkmatter-eval-server.ros")
+
+(defstruct eval-server-info
+  (process nil)
+  (port 0 :type integer))
+
+(defvar *client* (jsonrpc:make-client))
 
 (defvar *eval-server-processes*
   (make-hash-table :test #'equalp))
@@ -56,43 +64,59 @@
           (with-hash-table-iterator
             (generator-fn clnt-tbl)
             (loop
-              (multiple-value-bind (more? key proc)
+              (multiple-value-bind (more? key info)
                 (generator-fn)
                 (unless more? (return t))
-                (uiop:terminate-process proc :urgent t)
-                (uiop:terminate-process proc :urgent t)
-                (uiop:wait-process proc)))))))
+                (uiop:terminate-process (eval-server-info-process info) :urgent t)
+                (uiop:wait-process (eval-server-info-process info))))))))
   (format t "Killed all eval server processes."))
 
-(defun emit-response (id plist)
+(defun response-result (id result)
+  (format nil "{\"jsonrpc\": \"2.0\", \"id\": ~S, \"result\": ~A}" id result))
+
+(defun emit-response (id hash)
   (%emit-json
     201
-    (format nil "{\"jsonrpc\": \"2.0\", \"result\": {~{\"~A\": ~S~^, ~}}, \"id\": ~S}"
-            plist
-            id)))
+    (yason:encode-plist
+      `("jsonrpc" "2.0"
+        "result" ,hash
+        "id" ,id))))
 
 (defun emit-error (id code)
-  (let ((code (case code
+  (let* ((code (case code
                  (:parse-error -32700)
                  (:invalid-request -32600)
                  (:method-not-found -32601)
                  (:invalid-params -32602)
                  (:internal-error -32603)
                  (otherwise code)))
-        (message (case code
-                   (:parse-error "Parse error")
-                   (:invalid-request "Invalid Request")
-                   (:method-not-found "Method not found")
-                   (:invalid-params "Invalid params")
-                   (:internal-error "Internal error")
-                   (otherwise "Server error"))))
+         (message (case code
+                    (-32700 "Parse error")
+                    (-32600 "Invalid Request")
+                    (-32601 "Method not found")
+                    (-32602 "Invalid params")
+                    (-32603 "Internal error")
+                    (otherwise "Server error"))))
+    (format t "[ERROR] ~A ~A~%" id code)
   (%emit-json
     200
-    (format nil "{\"jsonrpc\": \"2.0\", \"error\": {\"code\": ~S, \"message\": ~S}, \"id\": ~S}"
-            code
-            message
-            id))))
+    (encode-to-string
+      (plist-hash-table
+        `("jsonrpc" "2.0"
+          "error" ,(plist-hash-table
+                     `("code" ,code
+                       "message" ,message)
+                     :test #'equal)
+          "id" ,id)
+        :test #'equal)))))
 
+(defun hash-table-plist-recur (hash-table)
+  (let ((plist (hash-table-plist hash-table)))
+    (mapcar #'(lambda (elm)
+                (if (hash-table-p elm)
+                    (hash-table-plist-recur elm)
+                    elm))
+            plist)))
 
 (defun %emit-json (status json-string)
   `(,status (:content-type "application/json") (,json-string)))
@@ -172,15 +196,17 @@
         (emit-error (gethash "id" json "null") :parse-error)
         (let ((id (gethash "id" json "null"))
               (method (gethash "method" json))
-              (params (gethash "params" json (make-hash-table))))
+              (params (gethash "params" json (make-hash-table)))
+              (descripter (gethash "descripter" json)))
           (entry-client id)
           (format t "[PUT] from ~A to ~A~%" id uri)
           (starts-case uri
-            `(("/plugin/" ,(lambda (path) (put/plugin/ env path id method params)))
-              ("/" ,(lambda (path) (put/ env path id method params)))
+            `(("/plugin/" ,(lambda (path) (put/plugin/ env path id descripter method params)))
+              ("/eval/" ,(lambda (path) (put/eval/ env path id descripter method params)))
+              ("/" ,(lambda (path) (put/ env path id descripter method params)))
               (otherwise ,(lambda (path) (emit-error id :method-not-found)))))))))
 
-(defun put/plugin/ (env path id method params)
+(defun put/plugin/ (env path id descripter method params)
   (with-hash-table-iterator
     (generator-fn *plugin-methods*)
       (loop
@@ -195,7 +221,55 @@
                     (return (emit-response id (funcall method params)))
                     (return (emit-error id :method-not-found))))))))))
 
-(defun put/ (env path id method params)
+
+(defun put/eval/ (env path id descripter method params)
+  (let ((proc-list (gethash id *eval-server-processes*)))
+    (if (null descripter)
+        (emit-error id :invalid-params)
+        (progn
+          (tagbody start
+                   (handler-bind ((error (lambda (c)
+                                           (format t "~A~%" c)
+                                           (make-eval-server id descripter)
+                                           (go start))))
+                     (jsonrpc:client-connect *client*
+                                             :url (format nil "ws://127.0.0.1:~A"
+                                                          (eval-server-info-port (gethash descripter proc-list)))
+                                             :mode :websocket)))
+          (format t "Connected~%")
+          (print (eval-server-info-port (gethash descripter proc-list)))
+          (format t "[METHOD] ~A~%" method)
+          (format t "[PARAMS] ~A~%" (hash-table-plist params))
+          (force-output)
+          #|
+          (handler-case
+            (let* ((result (hash-table-plist (jsonrpc:call *client* method params)))
+                   (response (emit-response id (yason:encode-plist result))))
+              (format t "~A~%" response)
+              (force-output)
+              response)
+            (jsonrpc:jsonrpc-error (c)
+                                   (format t "Error ~A~%" c)
+                                   (emit-error id (jsonrpc:jsonrpc-error-code c))))
+          |#
+          (let* ((result (jsonrpc:call *client* method params))
+                 (json-string (encode-to-string result)))
+            (format t "[RESULT] ~A~%" (response-result id json-string))
+            `(200 (:content-type "application/json")
+              (,(response-result id json-string))))))))
+
+(defun encode-to-string (ht)
+  (let ((stream (make-string-output-stream)))
+    (yason:encode ht stream)
+    (get-output-stream-string stream)))
+
+(defun encode-plist-to-string (ht)
+  (let ((stream (make-string-output-stream)))
+    (yason:encode-plist ht stream)
+    (get-output-stream-string stream)))
+
+
+(defun put/ (env path id descripter method params)
   "Send procedure result as JSON
    * darkmatter/makeServer
 
@@ -213,10 +287,29 @@
        'timestamp': string
      }"
   (switch (method :test #'string=)
-    ("darkmatter/makeServer" (make-eval-server id params))
     ("darkmatter/save" (save id params))
     (:default (emit-error id :method-not-found))))
 
+(defun make-eval-server (id descripter)
+  (let* ((proc-list (gethash id *eval-server-processes*))
+         (out (make-array 0 :element-type 'character :adjustable t))
+         (proc (uiop:launch-program +launch-eval-server+ :output :stream))
+         (port nil))
+    (format t "[darkmatter/makeServer] ")
+    (loop for cnt from 0 below 50
+          until (numberp port)
+          do (format t ".")
+             (force-output)
+             (sleep 2)
+             (setf out (read-line (uiop:process-info-output proc)))
+             (setf port (%parse-port-number out)))
+      (if (numberp port)
+          (format t "Make successful in port ~A~%" port)
+          (format t "Failed~%"))
+      (setf (gethash descripter proc-list)
+            (make-eval-server-info :process proc :port port))))
+
+#|
 (defun make-eval-server (id params)
   (let* ((proc-list (gethash id *eval-server-processes*))
          (descripter (gethash "descripter" params "none"))
@@ -238,7 +331,8 @@
             (emit-response id `("status" "true" "port" ,port)))
           (progn
             (format t "Failed (~A)~%" port)
-            (emit-error id 32000)))))
+            (emit-error id -32000)))))
+|#
 
 (defun save (params)
   )

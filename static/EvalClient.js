@@ -12,7 +12,7 @@ const SERVER_HOST = 'localhost';
 
 class EvalClient {
 
-  constructor(masterURI, clientId, descripter, websocket = true) {
+  constructor(masterURI, clientId, descripter, websocket = false) {
     this.id = clientId;
     this.descripter = descripter;
     this.enableWebSocket = websocket;
@@ -22,11 +22,12 @@ class EvalClient {
     this.token = null;
   }
 
-  static makeRequest(method, params, clientId = null) {
+  static makeRequest(method, params, clientId = null, descripter = "default") {
     let object = {
       "jsonrpc": "2.0",
       "method": method,
       "params": params,
+      "descripter": descripter
     };
     if (clientId != null) {
       object.id = clientId;
@@ -87,10 +88,10 @@ class EvalClient {
     * JSONRPC server don't support Cross-Origin Resource Sharing.
     * We should use WebSocket instead. */
   sendTCP(request) {
-    console.log("[->TCP] "+ request);
+    console.log("[->TCP] " + request);
     return new Promise((resolve, reject) => {
-      http.put(this.evalURI, request).then(json => {
-        console.log("[<-TCP] Resolve");
+      http.put(this.masterURI + '/eval/', request).then(json => {
+        console.log("[<-TCP] Resolve " + json);
         resolve(json);
       }).catch(err => {
         console.log("[<-TCP] Reject (DEAD_SERVER)");
@@ -130,7 +131,7 @@ class EvalClient {
       })
       .catch(err => {
         console.log(`[Reject] Request receive failed (${String(err)})`);
-        if (err == EvalClientError.DEAD_SERVER) {
+        if (err == EvalClientError.DEAD_SERVER && this.enableWebSocket) {
           this.makeServer()
             .then(() => {
               console.log("[Success] Make eval server at " + this.evalURI);
@@ -159,7 +160,7 @@ class EvalClient {
         defaultPackage: defaultPackage
       },
       trace: trace
-    }, this.id);
+    }, this.id, this.descripter);
     return this.request(request);
   }
 
@@ -169,7 +170,7 @@ class EvalClient {
       outputRendering: outputRendering,
       cellId: cellId,
       optional: optional
-    }, this.id);
+    }, this.id, this.descripter);
     return this.request(request);
   }
 }

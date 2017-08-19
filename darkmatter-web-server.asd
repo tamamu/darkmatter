@@ -17,6 +17,7 @@
   :author "Eddie"
   :license "MIT"
   :depends-on (:clack
+               :jsonrpc
                :quri
                :djula
                :alexandria

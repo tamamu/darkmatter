@@ -85,8 +85,8 @@
     (setf *trace-style* |trace|))
 
   (plist-hash-table
-    '("initialized" t)
-    :test #'equalp))
+    (list "initialized" t)
+    :test #'equal))
 
 (defun %log (output &key (stream *standard-output*))
   (multiple-value-bind (sec min hour date mon year day dst-p tz)
@@ -184,8 +184,7 @@
       (plist-hash-table
         `("returnValue" ,(write-to-string return-value)
           "output" ,all-output
-          "optional" ,|optional|)
-        :test #'equalp))))
+          "optional" ,|optional|)))))
 
 
 (defrpc |darkmatter/getShareObject| ()
