@@ -1,12 +1,12 @@
 # Darkmatter
 
-![Screen Shot](screenshots/screenshot.png)
+WIP!
 
 ## Requirement
 
 * <https://github.com/roswell/roswell>
 * Your favorite web browser (Google Chrome, Firefox...)
-* libev
+* [ASDF 3](https://common-lisp.net/project/asdf/)
 
 ## Installation
 
@@ -16,17 +16,18 @@ See also [installation of roswell](https://github.com/roswell/roswell/wiki/1.-In
 # Install requirements
 
 # for macOS
-$ brew install libev roswell
+$ brew install roswell
 
 # for Ubuntu/Debian
-$ apt-get install libev-dev
-# and build roswell from source!
+# build roswell from source!
 
 # for Arch Linux
-$ yaourt -S libev roswell
+$ yaourt -S roswell
 ```
 
 ```
+# Install ASDF3 by roswell
+$ ros install asdf
 $ ros install tamamu/darkmatter
 ```
 
@@ -36,7 +37,7 @@ The path starts from current directory.
 
 ```
 $ cd ~/path/to/root-directory
-$ darkm
+$ dmnote
 # Open localhost:8888/browse/file.lisp in your browser!
 ```
 
