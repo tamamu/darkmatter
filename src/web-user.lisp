@@ -8,6 +8,8 @@
 (defpackage darkmatter.web.user
   (:use :cl)
   (:nicknames :dm-web-user)
+  (:import-from :darkmatter.utils
+                :%log)
   (:import-from :darkmatter.settings
                 :*plugins*)
   (:export :*plugin-handler*
@@ -45,7 +47,7 @@
   (format nil "/plugin/~A" (%plugin-name)))
 
 (defun regist-plugin-handler (handler)
-  (format t "[Plugin] Set ~A handler~%" (%plugin-name))
+  (%log (format nil "Set ~A handler" (%plugin-name)) :INIT)
   (setf (gethash (%plugin-name) *plugin-handler*) handler))
 
 (defun regist-plugin-script (path)
@@ -60,4 +62,5 @@
 (defun load-web-plugins ()
   (mapcar (lambda (plugin)
             (require (format nil "~A-web" plugin)))
-          *plugins*)) 
+          *plugins*))
+

@@ -1,0 +1,17 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| Run Darkmatter Notebook
+exec ros -Q -m darkmatter-web-server -- $0 "$@"
+|#
+(progn ;;init forms
+  (unless (find-package :darkmatter-web-server)
+    (ql:quickload "darkmatter-web-server")))
+
+(defpackage :ros.script.foo.3711115193
+  (:use :cl :clack))
+(in-package :ros.script.foo.3711115193)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (darkmatter.web:start :port 8888 :use-thread nil))
+;;; vim: set ft=lisp lisp:

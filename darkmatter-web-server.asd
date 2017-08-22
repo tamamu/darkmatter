@@ -29,7 +29,7 @@
                  (:file "settings")
                  (:file "render" :depends-on ("web-user"))
                  (:file "utils")
-                 (:file "web-user" :depends-on ("settings")))))
+                 (:file "web-user" :depends-on ("settings" "utils")))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

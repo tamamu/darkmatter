@@ -14,7 +14,8 @@
   (:import-from :darkmatter.settings
                 :*plugins*)
   (:import-from :darkmatter.utils
-                :starts-case)
+                :starts-case
+                :%log)
   (:import-from :darkmatter.web.render
                 :notfound
                 :render-index
@@ -35,8 +36,11 @@
 (load-web-plugins)
 
 (defparameter +launch-eval-server+
-  ;"ros run --load darkmatter-eval-server.asd -e \"(require :darkmatter-eval-server)\""
-  "./roswell/darkmatter-eval-server.ros")
+  (if (= 0 (third (multiple-value-list (uiop:run-program "which dmserver" :ignore-error-status t))))
+      "dmserver"
+      (format nil "exec ~A"
+              (asdf:system-relative-pathname "darkmatter-web-server" #P"roswell/dmserver.ros"))))
+(%log (format nil "Found ~A as Eval server" +launch-eval-server+))
 
 (defstruct eval-server-info
   (process nil)
@@ -69,7 +73,7 @@
                 (unless more? (return t))
                 (uiop:terminate-process (eval-server-info-process info) :urgent t)
                 (uiop:wait-process (eval-server-info-process info))))))))
-  (format t "Killed all eval server processes."))
+  (%log "Killed all eval server processes."))
 
 (defun response-result (id result)
   (format nil "{\"jsonrpc\": \"2.0\", \"id\": ~S, \"result\": ~A}" id result))
@@ -97,7 +101,7 @@
                     (-32602 "Invalid params")
                     (-32603 "Internal error")
                     (otherwise "Server error"))))
-    (format t "[ERROR] ~A ~A~%" id code)
+    (%log (format nil "~A ~A%" id code) "Error response")
   (%emit-json
     200
     (encode-to-string
@@ -142,7 +146,7 @@
    * /plugin/
    * /"
   (let ((uri (url-decode (getf env :request-uri))))
-    (format t "[GET] ~A~%" uri)
+    (%log uri :GET)
     (starts-case uri
       `(("/browse/" ,(lambda (path) (get/browse/ env path)))
         ("/plugin/" ,(lambda (path) (get/plugin/ env path)))
@@ -174,7 +178,7 @@
             (unless more? (return (notfound env)))
             (multiple-value-bind (match? rest-path)
               (starts-with-subseq (format nil "~A/" plugin-name) path :return-suffix t)
-              (format t "[~A] ~A(~A)~%" plugin-name path rest-path)
+              (%log (format nil "~A ~A ~A" plugin-name path rest-path) "GET plugin")
               (when match?
                 (let ((response (funcall handler env rest-path)))
                   (return (or response (notfound env)))))))))))
@@ -190,7 +194,7 @@
   (let* ((uri (url-decode (getf env :request-uri)))
          (body (%read-raw-body env))
          (json (yason:parse body)))
-    (format t "[PUT] ~A~%" uri)
+    (%log uri :PUT)
     (force-output)
     (if (null (hash-table-p json))
         (emit-error (gethash "id" json "null") :parse-error)
@@ -199,7 +203,6 @@
               (params (gethash "params" json (make-hash-table)))
               (descripter (gethash "descripter" json)))
           (entry-client id)
-          (format t "[PUT] from ~A to ~A~%" id uri)
           (starts-case uri
             `(("/plugin/" ,(lambda (path) (put/plugin/ env path id descripter method params)))
               ("/eval/" ,(lambda (path) (put/eval/ env path id descripter method params)))
@@ -236,25 +239,13 @@
                                              :url (format nil "ws://127.0.0.1:~A"
                                                           (eval-server-info-port (gethash descripter proc-list)))
                                              :mode :websocket)))
-          (format t "Connected~%")
-          (print (eval-server-info-port (gethash descripter proc-list)))
-          (format t "[METHOD] ~A~%" method)
-          (format t "[PARAMS] ~A~%" (hash-table-plist params))
+          (%log (format nil "Method ~A~%Params ~A"
+                        method
+                        (hash-table-plist params)))
           (force-output)
-          #|
-          (handler-case
-            (let* ((result (hash-table-plist (jsonrpc:call *client* method params)))
-                   (response (emit-response id (yason:encode-plist result))))
-              (format t "~A~%" response)
-              (force-output)
-              response)
-            (jsonrpc:jsonrpc-error (c)
-                                   (format t "Error ~A~%" c)
-                                   (emit-error id (jsonrpc:jsonrpc-error-code c))))
-          |#
           (let* ((result (jsonrpc:call *client* method params))
                  (json-string (encode-to-string result)))
-            (format t "[RESULT] ~A~%" (response-result id json-string))
+            (%log (format nil "Result ~A" (response-result id json-string)))
             `(200 (:content-type "application/json")
               (,(response-result id json-string))))))))
 
@@ -295,7 +286,7 @@
          (out (make-array 0 :element-type 'character :adjustable t))
          (proc (uiop:launch-program +launch-eval-server+ :output :stream))
          (port nil))
-    (format t "[darkmatter/makeServer] ")
+    (%log "Try connecting to eval server")
     (loop for cnt from 0 below 50
           until (numberp port)
           do (format t ".")
@@ -303,11 +294,12 @@
              (sleep 2)
              (setf out (read-line (uiop:process-info-output proc)))
              (setf port (%parse-port-number out)))
-      (if (numberp port)
-          (format t "Make successful in port ~A~%" port)
-          (format t "Failed~%"))
-      (setf (gethash descripter proc-list)
-            (make-eval-server-info :process proc :port port))))
+    (fresh-line)
+    (if (numberp port)
+        (%log (format nil "Success to connect in port ~A" port))
+        (%log "Failed to connect"))
+    (setf (gethash descripter proc-list)
+          (make-eval-server-info :process proc :port port))))
 
 #|
 (defun make-eval-server (id params)

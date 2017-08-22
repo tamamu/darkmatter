@@ -4,10 +4,8 @@
 exec ros -Q --load darkmatter-eval-server.asd -- $0 "$@"
 |#
 (progn ;;init forms
-  (ros:ensure-asdf)
-  (require :darkmatter-eval-server)
-  ;;#+quicklisp (ql:quickload '() :silent t)
-  )
+  (unless (find-package :darkmatter-eval-server)
+    (ql:quickload "darkmatter-eval-server")))
 
 (defpackage :ros.script.darkmatter-eval-server.3711117109
   (:use :cl))

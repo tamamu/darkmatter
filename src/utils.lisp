@@ -10,7 +10,8 @@
   (:import-from :alexandria
                 :starts-with-subseq)
   (:export :split
-           :starts-case))
+           :starts-case
+           :%log))
 (in-package :darkmatter.utils)
 
 (defun split (str delim)
@@ -36,3 +37,16 @@
           (multiple-value-bind (match-p remain)
             (starts-with-subseq pattern keyform :return-suffix t)
             (when match-p (return (funcall matched remain))))))))
+
+(defun %log (message &optional type)
+  (multiple-value-bind
+    (second minute hour date month year day-of-week dst-p tz)
+    (get-decoded-time)
+    (declare (ignore date month year day-of-week dst-p tz))
+    (format t "~C[32;1m[~2,'0d:~2,'0d:~2,'0d]~C[0m~A ~A~%"
+            (code-char #o33) hour minute second (code-char #o33)
+            (if (null type)
+                ""
+                (format nil " ~C[34;1m~A~C[0m"
+                        (code-char #o33) type (code-char #o33)))
+            message)))
