@@ -8,22 +8,28 @@
 |#
 
 (in-package :cl-user)
-(defpackage darkmatter-eval-server-asd
+(defpackage darkmatter-notebook-asd
   (:use :cl :asdf))
-(in-package :darkmatter-eval-server-asd)
+(in-package :darkmatter-notebook-asd)
 
-(defsystem darkmatter-eval-server
+(defsystem darkmatter-notebook
   :version "1.0.0"
   :author "Eddie"
   :license "MIT"
-  :depends-on (:jsonrpc
-               :alexandria)
+  :depends-on (:clack
+               :jsonrpc
+               :quri
+               :djula
+               :alexandria
+               :yason)
   :components ((:module "src"
                 :components
-                ((:file "eval" :depends-on ("rpc"))
-                 (:file "rpc" :depends-on ("eval-user"))
-                 (:file "settings" :depends-on ("utils"))
-                 (:file "eval-user" :depends-on ("settings"))
+                ((:file "client/client" :depends-on ("client/handler"))
+                 (:file "client/handler" :depends-on ("client/render" "client/runtime" "client/user" "utils"))
+                 (:file "client/render" :depends-on ("client/user"))
+                 (:file "client/user" :depends-on ("settings" "utils"))
+                 (:file "client/runtime")
+                 (:file "settings")
                  (:file "utils"))))
   :description ""
   :long-description

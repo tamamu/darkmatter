@@ -5,7 +5,7 @@ exec ros -Q --load darkmatter-web-server.asd -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  (require :darkmatter-web-server)
+  (require :darkmatter-notebook)
   (require :clack)
   ;;#+quicklisp (ql:quickload '() :silent t)
   )
@@ -16,8 +16,8 @@ exec ros -Q --load darkmatter-web-server.asd -- $0 "$@"
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (clack:clackup darkmatter.web::*web*
+  (clack:clackup darkmatter.client::*web*
                  :port 8888
                  :use-thread nil
-                 :interrupt-handler (lambda () (darkmatter.web::kill-all-process))))
+                 :interrupt-handler (lambda () (darkmatter.client::kill-all-process))))
 ;;; vim: set ft=lisp lisp:

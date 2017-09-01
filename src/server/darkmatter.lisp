@@ -1,14 +1,14 @@
-;;; eval.lisp
+;;; darkmatter.lisp
 ;;-*- coding:utf-8 -*-
 
 ;;; Copyright (c) Eddie.
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.eval
-  (:use :cl :darkmatter.eval.rpc)
+(defpackage darkmatter
+  (:use :cl :darkmatter.rpc)
   (:export :start))
-(in-package :darkmatter.eval)
+(in-package :darkmatter)
 
 (defvar *server* (jsonrpc:make-server))
 

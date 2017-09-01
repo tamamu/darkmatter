@@ -1,13 +1,13 @@
-;;; web.lisp
+;;; client.lisp
 ;;-*- coding:utf-8 -*-
 
 ;;; Copyright (c) Eddie.
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.web
+(defpackage darkmatter.client
   (:use :cl)
-  (:import-from :darkmatter.web.handle
+  (:import-from :darkmatter.client.handler
                 :kill-all-process
                 :->get
                 :->put)
@@ -19,15 +19,15 @@
                 :starts-with-subseq)
   (:export :start
            :stop))
-(in-package :darkmatter.web)
+(in-package :darkmatter.client)
 
 (defvar *handler* nil)
 
 (defvar *appfile-path*
-  (asdf:system-relative-pathname "darkmatter-web-server" #P"app.lisp"))
+  (asdf:system-relative-pathname "darkmatter-notebook" #P"app.lisp"))
 
 (defvar *root-directory*
-  (asdf:system-relative-pathname "darkmatter-web-server" ""))
+  (asdf:system-relative-pathname "darkmatter-notebook" ""))
 
 (defparameter *web*
   (lambda (env)

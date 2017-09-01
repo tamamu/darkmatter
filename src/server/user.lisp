@@ -1,13 +1,13 @@
-;;; eval-user.lisp
+;;; server/user.lisp
 ;;-*- coding:utf-8 -*-
 
 ;;; Copyright (c) Eddie.
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.eval.user
+(defpackage darkmatter-user
   (:use :cl)
-  (:nicknames :dm-eval-user)
+  (:nicknames :dm-user)
   (:import-from :darkmatter.settings
                 :*plugins*)
   (:export :*eval-string-before-hooks*
@@ -17,7 +17,7 @@
            :hook-eval-string-after
            :hook-eval-string-finalize
            :load-eval-plugins))
-(in-package :darkmatter.eval.user)
+(in-package :darkmatter-user)
 
 (defun %identity (first &rest rest)
   first)

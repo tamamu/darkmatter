@@ -5,11 +5,11 @@
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.eval.rpc
+(defpackage darkmatter.rpc
   (:use :cl)
   (:import-from :darkmatter.settings
                 :*plugins*)
-  (:import-from :darkmatter.eval.user
+  (:import-from :darkmatter-user
                 :*eval-string-before-hooks*
                 :*eval-string-after-hooks*
                 :*eval-string-finalize-hooks*
@@ -19,7 +19,7 @@
                 :plist-hash-table)
   (:export :+rpcdef-list+
            :*using-package*))
-(in-package :darkmatter.eval.rpc)
+(in-package :darkmatter.rpc)
 
 (defvar +rpcdef-list+
   (list))
@@ -173,7 +173,7 @@
                        trace-output
                        error-output
                        standard-output))
-           (*package* (find-package :darkmatter.eval.rpc)))
+           (*package* (find-package :darkmatter.rpc)))
 
       (%log (format nil "Result: (Return) ~A~%(Output) ~A~%(Optional) ~A~%"
                     return-value

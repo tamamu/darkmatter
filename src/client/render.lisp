@@ -5,9 +5,9 @@
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.web.render
+(defpackage darkmatter.client.render
   (:use :cl)
-  (:import-from :darkmatter.web.user
+  (:import-from :darkmatter-client-user
                 :*plugin-scripts*)
   (:export :notfound
            :render-index
@@ -15,12 +15,12 @@
            :render-notebook
 
            :darkmatter-web-runtime))
-(in-package :darkmatter.web.render)
+(in-package :darkmatter.client.render)
 
 (defvar *dm-web-store*
   (make-instance 'djula:file-store
                  :search-path
-                 (list (asdf:system-relative-pathname "darkmatter-web-server" "templates/"))))
+                 (list (asdf:system-relative-pathname "darkmatter-notebook" "templates/"))))
 
 (setf djula:*current-store* *dm-web-store*)
 

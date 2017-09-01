@@ -1,13 +1,13 @@
-;;; web-user.lisp
+;;; client/user.lisp
 ;;-*- coding:utf-8 -*-
 
 ;;; Copyright (c) Eddie.
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.web.user
+(defpackage darkmatter-client-user
   (:use :cl)
-  (:nicknames :dm-web-user)
+  (:nicknames :dmc-user)
   (:import-from :darkmatter.utils
                 :%log)
   (:import-from :darkmatter.settings
@@ -20,7 +20,7 @@
            :regist-plugin-script
            :regist-plugin-method
            :load-web-plugins))
-(in-package :darkmatter.web.user)
+(in-package :darkmatter-client-user)
 
 
 (defvar *plugin-handler*

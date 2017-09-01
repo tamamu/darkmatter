@@ -8,28 +8,23 @@
 |#
 
 (in-package :cl-user)
-(defpackage darkmatter-web-server-asd
+(defpackage darkmatter-asd
   (:use :cl :asdf))
-(in-package :darkmatter-web-server-asd)
+(in-package :darkmatter-asd)
 
-(defsystem darkmatter-web-server
+(defsystem darkmatter
   :version "1.0.0"
   :author "Eddie"
   :license "MIT"
-  :depends-on (:clack
-               :jsonrpc
-               :quri
-               :djula
-               :alexandria
-               :yason)
+  :depends-on (:jsonrpc
+               :alexandria)
   :components ((:module "src"
                 :components
-                ((:file "web" :depends-on ("handle"))
-                 (:file "handle" :depends-on ("render" "utils" "web-user"))
-                 (:file "settings")
-                 (:file "render" :depends-on ("web-user"))
-                 (:file "utils")
-                 (:file "web-user" :depends-on ("settings" "utils")))))
+                ((:file "server/darkmatter" :depends-on ("server/rpc"))
+                 (:file "server/rpc" :depends-on ("server/user"))
+                 (:file "server/user" :depends-on ("settings"))
+                 (:file "settings" :depends-on ("utils"))
+                 (:file "utils"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

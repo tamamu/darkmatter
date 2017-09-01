@@ -4,8 +4,8 @@
 exec ros -Q --load darkmatter-eval-server.asd -- $0 "$@"
 |#
 (progn ;;init forms
-  (unless (find-package :darkmatter-eval-server)
-    (ql:quickload "darkmatter-eval-server")))
+  (unless (find-package :darkmatter)
+    (ql:quickload "darkmatter")))
 
 (defpackage :ros.script.darkmatter-eval-server.3711117109
   (:use :cl))
@@ -13,5 +13,5 @@ exec ros -Q --load darkmatter-eval-server.asd -- $0 "$@"
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (darkmatter.eval:start))
+  (darkmatter:start))
 ;;; vim: set ft=lisp lisp:

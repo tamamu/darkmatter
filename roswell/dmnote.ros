@@ -4,8 +4,8 @@
 exec ros -Q -m darkmatter-web-server -- $0 "$@"
 |#
 (progn ;;init forms
-  (unless (find-package :darkmatter-web-server)
-    (ql:quickload "darkmatter-web-server")))
+  (unless (find-package :darkmatter-notebook)
+    (ql:quickload "darkmatter-notebook")))
 
 (defpackage :ros.script.foo.3711115193
   (:use :cl :clack))
@@ -13,5 +13,5 @@ exec ros -Q -m darkmatter-web-server -- $0 "$@"
 
 (defun main (&rest argv)
   (declare (ignorable argv))
-  (darkmatter.web:start :port 8888 :use-thread nil))
+  (darkmatter.client:start :port 8888 :use-thread nil))
 ;;; vim: set ft=lisp lisp:

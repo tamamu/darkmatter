@@ -1,13 +1,13 @@
-;;; handle.lisp
+;;; handler.lisp
 ;;-*- coding:utf-8 -*-
 
 ;;; Copyright (c) Eddie.
 ;;; Distributed under the terms of the MIT License.
 
 (in-package :cl-user)
-(defpackage darkmatter.web.handle
+(defpackage darkmatter.client.handler
   (:use :cl)
-  (:import-from :darkmatter.web.user
+  (:import-from :darkmatter-client-user
                 :*plugin-handler*
                 :*plugin-methods*
                 :load-web-plugins)
@@ -16,11 +16,20 @@
   (:import-from :darkmatter.utils
                 :starts-case
                 :%log)
-  (:import-from :darkmatter.web.render
+  (:import-from :darkmatter.client.render
                 :notfound
                 :render-index
                 :render-files
                 :render-notebook)
+  (:import-from :darkmatter.client.runtime
+                :+launch-server+
+                :get-entity
+                :get-port
+                :make-server-process-table
+                :make-server-process
+                :delete-server-process-table
+                :add-host
+                :get-proc)
   (:import-from :quri
                 :url-decode)
   (:import-from :alexandria
@@ -31,49 +40,21 @@
   (:export :kill-all-process
            :->get
            :->put))
-(in-package :darkmatter.web.handle)
+(in-package :darkmatter.client.handler)
 
+;; Prepare
 (load-web-plugins)
-
-(defparameter +launch-eval-server+
-  (if (= 0 (third (multiple-value-list (uiop:run-program "which dmserver" :ignore-error-status t))))
-      "dmserver"
-      (format nil "exec ~A"
-              (asdf:system-relative-pathname "darkmatter-web-server" #P"roswell/dmserver.ros"))))
-(%log (format nil "Found ~A as Eval server" +launch-eval-server+))
-
-(defstruct eval-server-info
-  (process nil)
-  (port 0 :type integer))
+(%log (format nil "Found ~A as Eval server" +launch-server+))
+;; ---
 
 (defvar *client* (jsonrpc:make-client))
 
-(defvar *eval-server-processes*
-  (make-hash-table :test #'equalp))
-
-(defun entry-client (id)
-  (let ((proc-list (gethash id *eval-server-processes* nil)))
-  (if proc-list
-      proc-list
-      (setf (gethash id *eval-server-processes*)
-            (make-hash-table :test #'equalp)))))
+(defvar *server-table*
+  (make-server-process-table))
 
 (defun kill-all-process ()
-  (with-hash-table-iterator
-    (generator-fn *eval-server-processes*)
-      (loop
-        (multiple-value-bind (more? key clnt-tbl)
-          (generator-fn)
-          (unless more? (return t))
-          (with-hash-table-iterator
-            (generator-fn clnt-tbl)
-            (loop
-              (multiple-value-bind (more? key info)
-                (generator-fn)
-                (unless more? (return t))
-                (uiop:terminate-process (eval-server-info-process info) :urgent t)
-                (uiop:wait-process (eval-server-info-process info))))))))
-  (%log "Killed all eval server processes."))
+  (delete-server-process-table *server-table*)
+  (%log "Killed all server process"))
 
 (defun response-result (id result)
   (format nil "{\"jsonrpc\": \"2.0\", \"id\": ~S, \"result\": ~A}" id result))
@@ -124,11 +105,6 @@
 
 (defun %emit-json (status json-string)
   `(,status (:content-type "application/json") (,json-string)))
-
-(defun %parse-port-number (string)
-  (dotimes (index (length string))
-    (when (eq #\: (char string index))
-      (return (parse-integer string :start (1+ index) :junk-allowed t)))))
 
 (defun %read-raw-body (env)
   (let ((raw-body (flexi-streams:make-flexi-stream
@@ -202,7 +178,7 @@
               (method (gethash "method" json))
               (params (gethash "params" json (make-hash-table)))
               (descripter (gethash "descripter" json)))
-          (entry-client id)
+          (add-host *server-table* id)
           (starts-case uri
             `(("/plugin/" ,(lambda (path) (put/plugin/ env path id descripter method params)))
               ("/eval/" ,(lambda (path) (put/eval/ env path id descripter method params)))
@@ -226,28 +202,41 @@
 
 
 (defun put/eval/ (env path id descripter method params)
-  (let ((proc-list (gethash id *eval-server-processes*)))
-    (if (null descripter)
-        (emit-error id :invalid-params)
-        (progn
-          (tagbody start
-                   (handler-bind ((error (lambda (c)
-                                           (format t "~A~%" c)
-                                           (make-eval-server id descripter)
-                                           (go start))))
-                     (jsonrpc:client-connect *client*
-                                             :url (format nil "ws://127.0.0.1:~A"
-                                                          (eval-server-info-port (gethash descripter proc-list)))
-                                             :mode :websocket)))
-          (%log (format nil "Method ~A~%Params ~A"
-                        method
-                        (hash-table-plist params)))
-          (force-output)
+  (if (null descripter)
+      (emit-error id :invalid-params)
+      (progn
+        (tagbody start
+                 (handler-bind ((error (lambda (c)
+                                         (format t "~A~%" c)
+                                         (make-server-process *server-table* id descripter)
+                                         (go start))))
+                   (let ((proc (get-proc *server-table* id descripter)))
+                     (if proc
+                         (progn
+                           (%log (format nil "Connect in port ~A" (get-port proc)))
+                           (jsonrpc:client-connect *client*
+                                                   :url (format nil "ws://127.0.0.1:~A" (get-port proc))
+                                                   :mode :websocket))
+                         (progn
+                           (make-server-process *server-table* id descripter)
+                           (go start))))))
+        (%log (format nil "Method ~A~%Params ~A"
+                      method
+                      (hash-table-plist params)))
+        (force-output)
+        (handler-case
           (let* ((result (jsonrpc:call *client* method params))
                  (json-string (encode-to-string result)))
             (%log (format nil "Result ~A" (response-result id json-string)))
             `(200 (:content-type "application/json")
-              (,(response-result id json-string))))))))
+              (,(response-result id json-string))))
+          (error (c)
+                 (let ((entity (get-entity (get-proc *server-table* id descripter))))
+                   (loop for line = (read-line (uiop:process-info-output entity))
+                         while line
+                         do (format t "## ~A~%" line))
+                   (force-output)
+                   (exit)))))))
 
 (defun encode-to-string (ht)
   (let ((stream (make-string-output-stream)))
@@ -280,51 +269,6 @@
   (switch (method :test #'string=)
     ("darkmatter/save" (save id params))
     (:default (emit-error id :method-not-found))))
-
-(defun make-eval-server (id descripter)
-  (let* ((proc-list (gethash id *eval-server-processes*))
-         (out (make-array 0 :element-type 'character :adjustable t))
-         (proc (uiop:launch-program +launch-eval-server+ :output :stream))
-         (port nil))
-    (%log "Try connecting to eval server")
-    (loop for cnt from 0 below 50
-          until (numberp port)
-          do (format t ".")
-             (force-output)
-             (sleep 2)
-             (setf out (read-line (uiop:process-info-output proc)))
-             (setf port (%parse-port-number out)))
-    (fresh-line)
-    (if (numberp port)
-        (%log (format nil "Success to connect in port ~A" port))
-        (%log "Failed to connect"))
-    (setf (gethash descripter proc-list)
-          (make-eval-server-info :process proc :port port))))
-
-#|
-(defun make-eval-server (id params)
-  (let* ((proc-list (gethash id *eval-server-processes*))
-         (descripter (gethash "descripter" params "none"))
-         (out (make-array 0 :element-type 'character :adjustable t))
-         (proc (uiop:launch-program +launch-eval-server+ :output :stream))
-         (port nil))
-    (setf (gethash descripter proc-list) proc)
-    (format t "[darkmatter/makeServer] ")
-    (loop for cnt from 0 below 50
-          until (numberp port)
-          do (format t ".")
-             (force-output)
-             (sleep 2)
-             (setf out (read-line (uiop:process-info-output proc)))
-             (setf port (%parse-port-number out)))
-      (if (numberp port)
-          (progn
-            (format t "Make successful in port ~A~%" port)
-            (emit-response id `("status" "true" "port" ,port)))
-          (progn
-            (format t "Failed (~A)~%" port)
-            (emit-error id -32000)))))
-|#
 
 (defun save (params)
   )
