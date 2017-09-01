@@ -1,10 +1,10 @@
-(ql:quickload :darkmatter-web-server)
+;(ql:quickload :darkmatter-notebook)
 
 (in-package :cl-user)
-(defpackage darkmatter.web.app
+(defpackage darkmatter.client.app
   (:use :cl)
-  (:import-from :darkmatter.web
+  (:import-from :darkmatter.client
                 :*web*))
-(in-package :darkmatter.web.app)
+(in-package :darkmatter.client.app)
 
 *web*
