@@ -2,6 +2,9 @@
 
 WIP!
 
+Darkmatter is an extensible Common Lisp language server.
+Darkmatter Notebook is a notebook-style Web client of Darkmatter like Jupyter Notebook.
+
 ## Requirement
 
 * <https://github.com/roswell/roswell>
