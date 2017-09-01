@@ -10,8 +10,7 @@
   <script>
     const TOKEN = "8Pubhf8XQcI=";
     const DESCRIPTER = "{{ token }}:{{ path }}";
-    let c = new EvalClient(`http://${SERVER_HOST}:{{ port }}`, TOKEN, DESCRIPTER, false);
-    c.evalURI = "http://localhost:8888/eval/";
+    let c = new EvalClient(`http://${SERVER_HOST}:{{ port }}`, TOKEN, DESCRIPTER);
     let code = "(print *package*)";
     c.eval(code, "cell2")
      .then(result => console.log(result))
