@@ -47,5 +47,7 @@
   (format t "[Load] ~A~%" (or plugins *plugins*))
   (force-output)
   (mapcar (lambda (plugin)
-            (require (format nil "~A-eval" plugin)))
+            (handler-case
+              (require (format nil "~A-eval" plugin))
+              (error (c) (format nil "Failed to load ~A~%" plugin))))
           (or plugins *plugins*)))
