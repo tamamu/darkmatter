@@ -8,7 +8,8 @@
 (defpackage darkmatter.rpc
   (:use :cl)
   (:import-from :darkmatter.settings
-                :*plugins*)
+                :*plugins*
+                :load-settings)
   (:import-from :darkmatter-user
                 :*eval-string-before-hooks*
                 :*eval-string-after-hooks*
@@ -64,11 +65,16 @@
 
    * No response"
   (%log "Initalize")
+
+  (let ((ignore-settings (gethash "ignoreSettings" |initializeOptions| nil)))
+    (when (not ignore-settings)
+      (format t "[Option] Load settings~%")
+      (load-settings)))
+
   (let ((plugins (gethash "plugins" |initializeOptions|)))
     (when plugins
-      (let ((plugins (eval (read-from-string plugins))))
-        (format t "[Option] Get plugins ~A~%" plugins)
-        (load-eval-plugins plugins))))
+      (format t "[Option] Get plugins ~A~%" plugins)
+      (load-eval-plugins plugins)))
 
   (let ((default-package (gethash "defaultPackage" |initializeOptions|)))
     (when default-package
