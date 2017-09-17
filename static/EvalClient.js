@@ -156,7 +156,7 @@ class EvalClient {
   initialize(plugins, defaultPackage, trace) {
     const request = EvalClient.makeRequest('darkmatter/initialize', {
       initializeOptions: {
-        plugins: plugins,
+        plugins: plugins || [],
         defaultPackage: defaultPackage
       },
       trace: trace
