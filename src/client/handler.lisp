@@ -82,7 +82,7 @@
                     (-32602 "Invalid params")
                     (-32603 "Internal error")
                     (otherwise "Server error"))))
-    (%log (format nil "~A ~A%" id code) "Error response")
+    (%log (format nil "~A ~A~%" id code) "Error response")
   (%emit-json
     200
     (encode-to-string
