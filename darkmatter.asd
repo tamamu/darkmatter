@@ -21,7 +21,7 @@
   :components ((:module "src"
                 :components
                 ((:file "server/darkmatter" :depends-on ("server/rpc"))
-                 (:file "server/rpc" :depends-on ("server/user"))
+                 (:file "server/rpc" :depends-on ("server/user" "utils"))
                  (:file "server/user" :depends-on ("settings"))
                  (:file "settings" :depends-on ("utils"))
                  (:file "utils"))))

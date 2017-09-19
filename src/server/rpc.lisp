@@ -7,6 +7,8 @@
 (in-package :cl-user)
 (defpackage darkmatter.rpc
   (:use :cl)
+  (:import-from :darkmatter.utils
+                :gen-serial)
   (:import-from :darkmatter.settings
                 :*plugins*
                 :load-settings)
@@ -22,6 +24,7 @@
            :*using-package*))
 (in-package :darkmatter.rpc)
 
+(defvar pkgnum (gen-serial 0))
 (defvar +rpcdef-list+
   (list))
 
@@ -47,8 +50,7 @@
 
 (defun initialize-package ()
   "Make new package."
-  (let* ((magic (write-to-string (get-universal-time)))
-         (pkg (make-package (format nil "DARKMATTER.LOCAL.~A" magic)
+  (let* ((pkg (make-package (format nil "DARKMATTER.LOCAL.~A" (funcall pkgnum))
                             :use (getf *default-package-definition* :use))))
     pkg))
 

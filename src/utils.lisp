@@ -9,10 +9,15 @@
   (:use :cl)
   (:import-from :alexandria
                 :starts-with-subseq)
-  (:export :split
+  (:export :gen-serial
+           :split
            :starts-case
            :%log))
 (in-package :darkmatter.utils)
+
+(defun gen-serial (start)
+  (let ((num start))
+  (lambda () (incf num))))
 
 (defun split (str delim)
   (let ((res (make-array 0 :element-type 'string
