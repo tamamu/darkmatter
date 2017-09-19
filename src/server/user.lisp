@@ -48,6 +48,6 @@
   (force-output)
   (mapcar (lambda (plugin)
             (handler-case
-              (require (format nil "~A-eval" plugin))
+              (require (format nil "~A/darkmatter" plugin))
               (error (c) (format nil "Failed to load ~A~%" plugin))))
           (or plugins *plugins*)))
