@@ -10,6 +10,34 @@ const EvalClientError = {
 
 const SERVER_HOST = 'localhost';
 
+class InitializeOptions {
+  constructor() {
+    this.$debug = null;
+    this.$ignoreSettings = null;
+    this.$plugins = null;
+    this.$defaultPackage = null;
+    this.$trace = null;
+  }
+
+  debug(value) { this.$debug = value; return this; }
+  ignoreSettings(value) { this.$ignoreSettings = value; return this; }
+  plugins(value) { this.$plugins = value; return this; }
+  defaultPackage(value) { this.$defaultPackage = value; return this; }
+  trace(value) { this.$trace = value; return this; }
+
+  asObject() {
+    return {
+      initializeOptions: {
+        debug: this.$debug,
+        ignoreSettings: this.$ignoreSettings,
+        plugins: this.$plugins,
+        defaultPackage: this.$defaultPackage
+      },
+      trace: this.$trace
+    };
+  }
+}
+
 class EvalClient {
 
   constructor(masterURI, clientId, descripter, websocket = false) {
@@ -153,14 +181,9 @@ class EvalClient {
     });
   }
 
-  initialize(plugins, defaultPackage, trace) {
-    const request = EvalClient.makeRequest('darkmatter/initialize', {
-      initializeOptions: {
-        plugins: plugins || [],
-        defaultPackage: defaultPackage
-      },
-      trace: trace
-    }, this.id, this.descripter);
+  initialize(initializeOptions) {
+    const request = EvalClient.makeRequest('darkmatter/initialize',
+      initializeOptions, this.id, this.descripter);
     return this.request(request);
   }
 
