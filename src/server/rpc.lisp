@@ -13,6 +13,7 @@
                 :*plugins*
                 :load-settings)
   (:import-from :darkmatter-user
+                :*debug*
                 :*eval-string-before-hooks*
                 :*eval-string-after-hooks*
                 :*eval-string-finalize-hooks*
@@ -65,8 +66,21 @@
   "Initialize darkmatter evaluation server.
    processId is the identifier for the instance of this program.
 
-   * No response"
-  (%log "Initalize")
+   initializeOptions: {
+     debug: Boolean,
+     ignoreSettings: Boolean,
+     plugins: String,
+     defaultPackage: String
+   }
+
+   * Response whether suuceeded initialization or not"
+  (%log (format nil "Initalize (debug:~A)" *debug*))
+
+  (let ((debug (gethash "debug" |initializeOptions| nil)))
+    (if debug
+        (format t "[Option] Enable debug mode~%")
+        (format t "[Option] Disable debug mode~%"))
+    (setf *debug* debug))
 
   (let ((ignore-settings (gethash "ignoreSettings" |initializeOptions| nil)))
     (when (not ignore-settings)
@@ -151,24 +165,30 @@
          (*error-output* (make-string-output-stream))
          (*trace-output* (make-string-output-stream))
          (code-position 0)
+         (source '(progn))
          (return-value nil)
          (errorp nil))
 
+    ;; parse and concatenate the source in a PROGN
     (handler-case
       (loop while code-position
             with sexp
             do (multiple-value-setq (sexp code-position)
                  (read-from-string |code| :eof-error-p t :start code-position))
-               (multiple-value-setq (sexp |optional|)
-                 (%hook-eval-string-before sexp |optional|))
-               (multiple-value-setq (return-value |optional|)
-                 (%hook-eval-string-after (eval sexp) |optional|))
-               ;(setf sexp (%hook-eval-string-before sexp |optional|)
-               ;      return-value (%hook-eval-string-after (eval sexp) |optional|))
-               )
-      (end-of-file (c) nil)
-      (error (c) (setf errorp t)
-                 (write c)))
+            always sexp
+            do (setf source (append source (list sexp))))
+      (end-of-file (c) nil))
+
+    ;; eval the source with hooks
+    (handler-case
+      (progn
+        (multiple-value-setq (source |optional|)
+          (%hook-eval-string-before source |optional|))
+        (multiple-value-setq (return-value |optional|)
+          (%hook-eval-string-after (eval source) |optional|)))
+      (error (c)
+        (setf errorp t)
+        (write (c))))
 
     (multiple-value-setq (return-value |outputRendering| |optional|)
       (%hook-eval-string-finalize return-value |outputRendering| |optional|))

@@ -10,7 +10,8 @@
   (:nicknames :dm-user)
   (:import-from :darkmatter.settings
                 :*plugins*)
-  (:export :*eval-string-before-hooks*
+  (:export :*debug*
+           :*eval-string-before-hooks*
            :*eval-string-after-hooks*
            :*eval-string-finalize-hooks*
            :hook-eval-string-before
@@ -18,6 +19,8 @@
            :hook-eval-string-finalize
            :load-eval-plugins))
 (in-package :darkmatter-user)
+
+(defvar *debug* nil)
 
 (defun %identity (first &rest rest)
   first)
