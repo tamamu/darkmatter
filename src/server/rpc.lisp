@@ -188,7 +188,7 @@
           (%hook-eval-string-after (eval source) |optional|)))
       (error (c)
         (setf errorp t)
-        (write (c))))
+        (write c)))
 
     (multiple-value-setq (return-value |outputRendering| |optional|)
       (%hook-eval-string-finalize return-value |outputRendering| |optional|))
