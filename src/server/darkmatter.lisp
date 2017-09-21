@@ -19,5 +19,7 @@
                       (cdr rpcdef)))
   +rpcdef-list+)
 
-(defun start ()
-  (jsonrpc:server-listen *server* :mode :websocket))
+(defun start (&key (port nil))
+  (if port
+      (jsonrpc:server-listen *server* :mode :websocket :port port)
+      (jsonrpc:server-listen *server* :mode :websocket)))
