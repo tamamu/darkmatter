@@ -12,6 +12,7 @@
   (:export :gen-serial
            :split
            :starts-case
+           :escape
            :%log))
 (in-package :darkmatter.utils)
 
@@ -42,6 +43,15 @@
           (multiple-value-bind (match-p remain)
             (starts-with-subseq pattern keyform :return-suffix t)
             (when match-p (return (funcall matched remain))))))))
+
+(defun escape (str)
+  (let ((stream (make-string-output-stream)))
+    (loop for c across str
+          do (case c
+               (#\< (write-string "&lt;" stream))
+               (#\> (write-string "&gt;" stream))
+               (otherwise (write-char c stream))))
+    (get-output-stream-string stream)))
 
 (defun %log (message &optional type)
   (multiple-value-bind

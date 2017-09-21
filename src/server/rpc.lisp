@@ -8,7 +8,8 @@
 (defpackage darkmatter.rpc
   (:use :cl)
   (:import-from :darkmatter.utils
-                :gen-serial)
+                :gen-serial
+                :escape)
   (:import-from :darkmatter.settings
                 :*plugins*
                 :load-settings)
@@ -188,7 +189,7 @@
           (%hook-eval-string-after (eval source) |optional|)))
       (error (c)
         (setf errorp t)
-        (write c)))
+        (format t "<strong class=\"error\">~A</strong>~%" (escape (write-to-string c)))))
 
     (multiple-value-setq (return-value |outputRendering| |optional|)
       (%hook-eval-string-finalize return-value |outputRendering| |optional|))
