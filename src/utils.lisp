@@ -64,4 +64,5 @@
                 ""
                 (format nil " ~C[34;1m~A~C[0m"
                         (code-char #o33) type (code-char #o33)))
-            message)))
+            message)
+    (force-output)))
