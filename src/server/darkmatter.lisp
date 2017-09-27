@@ -26,6 +26,16 @@
     (directory
       (format nil "~A*" *log-directory*))))
 
+(defun next-log-file-number ()
+  (let* ((largest
+           (car
+             (last
+               (directory
+                 (format nil "~A*" *log-directory*))))))
+    (if (null largest)
+        0
+        (1+ (parse-integer (file-namestring largest))))))
+
 (defvar *server* (jsonrpc:make-server))
 
 (mapcar
@@ -44,7 +54,7 @@
                :template
                log-template
                :generate-random-string
-               #'(lambda () (write-to-string (count-log-files))))
+               #'(lambda () (write-to-string (next-log-file-number))))
       (format t "Start darkmatter with logging into ~A~%"
               (truename logfile))
       (let ((*standard-output* logfile))
