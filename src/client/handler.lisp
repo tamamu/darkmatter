@@ -136,7 +136,8 @@
    * /browse/.../*       File"
   (if (string= path "")
       (notfound env)
-      (render-notebook env path)))
+      (let ((real-path (format nil "~A~A" (truename "./") path)))
+        (render-notebook env real-path))))
 
 (defun get/plugin/ (env path)
   "Send file in the plugin to client
