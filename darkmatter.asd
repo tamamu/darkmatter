@@ -20,11 +20,12 @@
                :websocket-driver-server
                :quri
                :cl-fad
-							 :jsown
+               :jsown
                :djula
                :string-case
                :alexandria
                :cl-markup
+               :trivial-mimes
                :bordeaux-threads)
   :components ((:module "src"
                 :components
