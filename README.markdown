@@ -10,11 +10,11 @@
 
 ## Installation
 
-See also [installation of roswell](https://github.com/roswell/roswell/wiki/1.-Installation).
+See also [Installation Guide for Roswell](https://github.com/roswell/roswell/wiki/Installation).
+
+Install the requirements and Roswell.
 
 ```
-# Install requirements
-
 # for macOS
 $ brew install libev roswell
 
@@ -26,16 +26,27 @@ $ apt-get install libev-dev
 $ yaourt -S libev roswell
 ```
 
+Add the PATH in the initialization file (such as ~/.bashrc) to use `darkm` command later.
+
+```
+export PATH=$PATH:~/.roswell/bin
+```
+
+Install Darkmatter.
+
 ```
 $ ros install tamamu/darkmatter
 ```
 
 ## Usage
 
-The path starts from current directory.
+Darkmatter starts from current directory.
 
 ```
+# change the current directory to the one starting Darkmatter from
 $ cd ~/path/to/root-directory
+
+# start Darkmatter
 $ darkm
 # Open localhost:8888/browse/file.lisp in your browser!
 ```
